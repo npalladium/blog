@@ -1,0 +1,24 @@
+{{- $pages := .Site.RegularPages | first 20 -}}
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>{{ .Site.Title }}</title>
+  <link href="{{ "atom.xml" | absURL }}" rel="self" type="application/atom+xml"/>
+  <link href="{{ .Site.BaseURL }}" rel="alternate" type="text/html"/>
+  <id>{{ .Site.BaseURL }}</id>
+  <updated>{{ now.Format "2006-01-02T15:04:05Z07:00" }}</updated>
+  <author><name>{{ .Site.Params.author }}</name></author>
+  {{ range $pages }}
+  <entry>
+    <title>{{ .Title }}</title>
+    <link href="{{ .Permalink }}" rel="alternate" type="text/html"/>
+    <id>{{ .Permalink }}</id>
+    <updated>{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}</updated>
+    <published>{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}</published>
+    <author>
+      <name>{{ with .Params.author }}{{ . }}{{ else }}{{ $.Site.Params.author }}{{ end }}</name>
+    </author>
+    {{ range .Params.tags }}<category term="{{ . }}"/>
+    {{ end }}<content type="html"><![CDATA[{{ .Content }}]]></content>
+  </entry>
+  {{ end }}
+</feed>

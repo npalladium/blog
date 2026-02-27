@@ -1,0 +1,24 @@
+{{ partial "header.html" . }}
+<div class="article-meta">
+<h1><span class="title">{{ .Title | markdownify }}</span></h1>
+{{ if .Section -}}
+{{- $authors := slice -}}
+{{- with .Params.authors }}{{ $authors = . }}{{ else }}{{ with .Params.author }}{{ $authors = slice . }}{{ else }}{{ with $.GitInfo }}{{ $authors = slice .AuthorName }}{{ end }}{{ end }}{{ end -}}
+{{ with $authors }}<p class="authors">{{ delimit . ", " }}</p>{{ end }}
+{{ if not .Date.IsZero -}}
+  {{- $created := .Date.Format .Site.Params.dateFormat -}}
+  {{- $updated := .Lastmod.Format .Site.Params.dateFormat -}}
+  {{- if eq $created $updated -}}
+    <p class="dates">{{ $created }}</p>
+  {{- else -}}
+    <p class="dates">{{ $created }} · updated {{ $updated }}</p>
+  {{- end }}
+{{- end }}
+{{- end }}
+</div>
+
+<main>
+{{ .Content }}
+</main>
+
+{{ partial "footer.html" . }}

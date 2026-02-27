@@ -1,0 +1,40 @@
+#+title: Hello, World
+#+date: 2026-02-27
+#+author: npalladium
+#+tags[]: fibonacci math poetry
+
+Welcome to the blog.
+
+* Code
+
+#+begin_src python
+def fib(n):
+    a, b = 0, 1
+    while a < n:
+        print(a, end=' ')
+        a, b = b, a + b
+#+end_src
+
+* Math
+
+$$
+\varphi = \frac{1 + \sqrt{5}}{2} = 1 + \cfrac{1}{1 + \cfrac{1}{1 + \cfrac{1}{1 + \cdots}}}
+$$
+
+* Poetry
+
+#+begin_quote
+One
+
+Small,
+
+Precise,
+
+Poetic,
+
+Spiraling mixture:
+
+Math plus poetry yields the Fib.
+#+end_quote
+
+--- Pincus, Gregory K.

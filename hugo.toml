@@ -1,0 +1,55 @@
+baseURL = "https://example.com/"
+languageCode = "en-us"
+title = "npalladium"
+theme = "hugo-xmin"
+enableGitInfo = true
+
+[frontmatter]
+  # Dates: git commit date > file mtime > frontmatter field
+  date     = [":git", ":fileModTime", "date"]
+  lastmod  = [":git", ":fileModTime", "lastmod", "date"]
+
+[params]
+  author     = "n"
+  footer     = "© 2026 n"
+  dateFormat = "2006-01-02"
+
+[markup]
+  [markup.highlight]
+    codeFences  = true
+    noClasses   = false   # emit class names; no colour without a highlight stylesheet
+  [markup.goldmark.renderer]
+    unsafe = true         # allow raw HTML in Markdown (needed for some LaTeX tricks)
+
+[mediaTypes]
+  [mediaTypes."application/atom+xml"]
+    suffixes = ["xml"]
+
+[outputFormats]
+  [outputFormats.Atom]
+    mediaType     = "application/atom+xml"
+    baseName      = "atom"
+    isPlainText   = false
+    rel           = "alternate"
+    isHTML        = false
+    noUgly        = true
+
+[outputs]
+  home     = ["HTML", "RSS", "Atom"]
+  section  = ["HTML", "RSS", "Atom"]
+  page     = ["HTML"]
+  taxonomy = ["HTML", "RSS", "Atom"]
+  term     = ["HTML", "RSS", "Atom"]
+
+[[menu.main]]
+  name   = "Home"
+  url    = "/"
+  weight = 1
+[[menu.main]]
+  name   = "Posts"
+  url    = "/post/"
+  weight = 2
+[[menu.main]]
+  name   = "About"
+  url    = "/about/"
+  weight = 3

@@ -1,0 +1,56 @@
+#+TITLE: Writing Issue-Fixing Documentation That Actually Fixes Issues
+#+AUTHOR: A Dev Tired of Debugging Docs, A Programmer Who Finally Read Their Own Docs
+#+DATE: 2026-01-31
+#+LATEX_HEADER: \usepackage{parskip}
+
+* The Iron Triangle of Fix Documentation
+Every issue-fixing document must contain these three elements, or you're just publishing creative fiction:
+** Pre-Flight Check: Confirming You Have the Right Problem
+Before users start running commands they found on Stack Overflow, make them verify they actually have the issue your doc addresses. Include:
+- Specific error messages to search for
+- Symptoms that distinguish this from similar issues
+- Version numbers, environment details, or configuration states
+
+Remember what every old hand knows: Half of support tickets are people applying the wrong fix to the right problem. The other half are people applying the right fix to the wrong problem.
+** Post-Mortem: Proving the Fix Actually Worked
+Changes don't always take hold immediately. Caches exist. Services need restarts. The universe is indifferent to your deployment.
+
+Provide clear verification steps:
+- What output/behavior should change
+- How long to wait before panicking
+- Common reasons the fix might not apply (caching, permissions, phase of moon)
+
+The person following your doc should never have to wonder "did it work?" They should *know*.
+
+** The Escape Hatch: Reverting Your Mess
+Nothing strikes fear like "irreversible changes." Give users:
+- Explicit revert instructions
+- Which changes are reversible vs permanent
+- What they should backup before starting
+
+Sometimes these steps are obvious, sometimes they are not. Sometimes you think they are obvious, but they are not.
+
+If you can't provide revert steps, start your doc with "POINT OF NO RETURN AHEAD"
+
+* Bonus Points: Separating Good Docs from Great Docs
+** Breaking Changes
+"Fixing X will break Y" belongs at the *top* of your doc, not buried in paragraph seven. Users who discover downstream breakage after applying your fix will remember you, and not fondly.
+** Related Issues and Rabbit Holes
+Link to similar issues that might be confused with this one. Save future-you from explaining the difference for the hundredth time.
+** External References
+Link to relevant docs, upstream issues, RFCs, or the blog post that caused this mess in the first place.
+** Sanity Checks Throughout
+Add verification steps between major operations. Let users catch mistakes early rather than at the catastrophic finale.
+** Additional Bonus Items
+- *Common Pitfalls*: The mistakes 80% of people make when following this doc
+- *Time Estimates*: How long each step takes (including waiting for DNS propagation until heat death of universe)
+- *Troubleshooting Section*: "If Step 3 fails with error X, try Y"
+- *Prerequisites*: Required permissions, tools, access levels, or ritual sacrifices
+- *Here be dragons:* Doing something high technical, poking into internals or using some software in a way it was not intended? Mark it down.
+* Conclusion
+Good fix documentation is like good code: it handles edge cases, provides clear feedback, and doesn't leave users wondering what just happened. 
+
+Bad fix documentation is also like bad code: it assumes a perfect world, fails silently, and generates technical debt in the form of confused users and repeat tickets (or even worse completely NEW tickets caused by it).
+
+Write the doc you'd be okay with sending to a psychopath who knows your address.
+

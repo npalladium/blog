@@ -1,0 +1,17 @@
+.article-meta .authors,
+.article-meta .dates {
+  font-size: 0.85em;
+  margin: 0.2em 0;
+}
+
+a.tag {
+  display: inline-block;
+  font-size: 0.75em;
+  background: #eee;
+  border-radius: 3px;
+  padding: 1px 6px;
+  margin-left: 4px;
+  text-decoration: none;
+  color: inherit;
+}
+a.tag:hover { background: #ddd; }
