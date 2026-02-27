@@ -13,7 +13,7 @@
   <li>
     <span class="date">{{ .Date.Format $.Site.Params.dateFormat }}</span>
     <a href="{{ .RelPermalink }}">{{ .Title | markdownify }}</a>
-    {{ range .Params.tags }}<a href="{{ "/tags/" | relURL }}{{ . | urlize }}/" class="tag">{{ . }}</a>{{ end }}
+    {{ range .Params.tags }}{{ with $.Site.GetPage (printf "/tags/%s" (. | urlize)) }}<a href="{{ .RelPermalink }}" class="tag">{{ .Title }}</a>{{ end }}{{ end }}
   </li>
   {{ end }}
 </ul>
