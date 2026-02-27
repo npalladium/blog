@@ -1,5 +1,7 @@
 #+TITLE: Writing Issue-Fixing Documentation That Actually Fixes Issues
-#+AUTHOR: A Dev Tired of Debugging Docs, A Programmer Who Finally Read Their Own Docs
+#+AUTHOR: npalladium
+#+AUTHOR: A Dev Tired of Debugging Docs
+#+AUTHOR: A Programmer Who Finally Read Their Own Docs
 #+DATE: 2026-01-31
 #+LATEX_HEADER: \usepackage{parskip}
 
@@ -33,19 +35,14 @@ Sometimes these steps are obvious, sometimes they are not. Sometimes you think t
 If you can't provide revert steps, start your doc with "POINT OF NO RETURN AHEAD"
 
 * Bonus Points: Separating Good Docs from Great Docs
-** Breaking Changes
-"Fixing X will break Y" belongs at the *top* of your doc, not buried in paragraph seven. Users who discover downstream breakage after applying your fix will remember you, and not fondly.
-** Related Issues and Rabbit Holes
-Link to similar issues that might be confused with this one. Save future-you from explaining the difference for the hundredth time.
-** External References
-Link to relevant docs, upstream issues, RFCs, or the blog post that caused this mess in the first place.
-** Sanity Checks Throughout
-Add verification steps between major operations. Let users catch mistakes early rather than at the catastrophic finale.
-** Additional Bonus Items
+- *Prerequisites*: Required permissions, tools, access levels, or ritual sacrifices
+- *Breaking Changes*: "Fixing X will break Y" belongs at the *top* of your doc, not buried in paragraph seven. Users who discover downstream breakage after applying your fix will remember you, and not fondly.
+- *External References*: Link to relevant docs, upstream issues, RFCs, or the blog post that caused this mess in the first place.
+- *Sanity Checks Throughout*: Add verification steps between major operations. Let users catch mistakes early rather than at the catastrophic finale.
+- *Troubleshooting Section*: "If Step 3 fails with error X, try Y"
+- *Related Issues and Rabbit Holes*: Link to similar issues that might be confused with this one. Save future-you from explaining the difference for the hundredth time.
 - *Common Pitfalls*: The mistakes 80% of people make when following this doc
 - *Time Estimates*: How long each step takes (including waiting for DNS propagation until heat death of universe)
-- *Troubleshooting Section*: "If Step 3 fails with error X, try Y"
-- *Prerequisites*: Required permissions, tools, access levels, or ritual sacrifices
 - *Here be dragons:* Doing something high technical, poking into internals or using some software in a way it was not intended? Mark it down.
 * Conclusion
 Good fix documentation is like good code: it handles edge cases, provides clear feedback, and doesn't leave users wondering what just happened. 
