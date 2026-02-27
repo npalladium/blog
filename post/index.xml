@@ -1,4 +1,21 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on npalladium</title><link>/blog/post/</link><description>Recent content in Posts on npalladium</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Fri, 27 Feb 2026 23:55:25 +0530</lastBuildDate><atom:link href="/blog/post/index.xml" rel="self" type="application/rss+xml"/><item><title>Hello, World</title><link>/blog/post/hello-world/</link><pubDate>Fri, 27 Feb 2026 00:00:00 +0000</pubDate><guid>/blog/post/hello-world/</guid><description>&lt;p&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on npalladium</title><link>/blog/post/</link><description>Recent content in Posts on npalladium</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 28 Feb 2026 00:54:59 +0530</lastBuildDate><atom:link href="/blog/post/index.xml" rel="self" type="application/rss+xml"/><item><title>Writing Issue-Fixing Documentation That Actually Fixes Issues</title><link>/blog/post/bug-fixing-docs/</link><pubDate>Sat, 31 Jan 2026 00:00:00 +0000</pubDate><guid>/blog/post/bug-fixing-docs/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
+&lt;h2 id="headline-1"&gt;
+The Iron Triangle of Fix Documentation
+&lt;/h2&gt;
+&lt;div id="outline-text-headline-1" class="outline-text-2"&gt;
+&lt;p&gt;Every issue-fixing document must contain these three elements, or you&amp;#39;re just publishing creative fiction:&lt;/p&gt;
+&lt;div id="outline-container-headline-2" class="outline-3"&gt;
+&lt;h3 id="headline-2"&gt;
+Pre-Flight Check: Confirming You Have the Right Problem
+&lt;/h3&gt;
+&lt;div id="outline-text-headline-2" class="outline-text-3"&gt;
+&lt;p&gt;Before users start running commands they found on Stack Overflow, make them verify they actually have the issue your doc addresses. Include:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Specific error messages to search for&lt;/li&gt;
+&lt;li&gt;Symptoms that distinguish this from similar issues&lt;/li&gt;
+&lt;li&gt;Version numbers, environment details, or configuration states&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Remember what every old hand knows: Half of support tickets are people applying the wrong fix to the right problem. The other half are people applying the right fix to the wrong problem.&lt;/p&gt;</description></item><item><title>Hello, World</title><link>/blog/post/hello-world/</link><pubDate>Fri, 27 Feb 2026 00:00:00 +0000</pubDate><guid>/blog/post/hello-world/</guid><description>&lt;p&gt;
 Welcome to the blog.&lt;/p&gt;
 &lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
