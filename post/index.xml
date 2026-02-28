@@ -1,4 +1,13 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on npalladium</title><link>/blog/post/</link><description>Recent content in Posts on npalladium</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 28 Feb 2026 00:54:59 +0530</lastBuildDate><atom:link href="/blog/post/index.xml" rel="self" type="application/rss+xml"/><item><title>Writing Issue-Fixing Documentation That Actually Fixes Issues</title><link>/blog/post/bug-fixing-docs/</link><pubDate>Sat, 31 Jan 2026 00:00:00 +0000</pubDate><guid>/blog/post/bug-fixing-docs/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on npalladium</title><link>/blog/post/</link><description>Recent content in Posts on npalladium</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 28 Feb 2026 18:20:31 +0530</lastBuildDate><atom:link href="/blog/post/index.xml" rel="self" type="application/rss+xml"/><item><title>Scripting For Profit</title><link>/blog/post/bash/</link><pubDate>Sat, 28 Feb 2026 18:20:31 +0530</pubDate><guid>/blog/post/bash/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
+&lt;h2 id="headline-1"&gt;
+Scripting?
+&lt;/h2&gt;
+&lt;div id="outline-text-headline-1" class="outline-text-2"&gt;
+&lt;p&gt;Scripts are everywhere, from doing backups of your DB server to S3, listing all the namespaces in a Kubernetes cluster without pods, or simply bootstrapping your environments. A day doesn&amp;#39;t go by without writing a new script or at least executing a script I wrote before.&lt;/p&gt;
+&lt;p&gt;
+Scripts make life easier. They save time on repetitive tasks. They are ubiquitous.&lt;/p&gt;
+&lt;p&gt;
+Having been writing scripts for a while &lt;sup class="footnote-reference"&gt;&lt;a id="footnote-reference-1" href="#footnote-1"&gt;1&lt;/a&gt;&lt;/sup&gt;, I wanted to write an article to:&lt;/p&gt;</description></item><item><title>Writing Issue-Fixing Documentation That Actually Fixes Issues</title><link>/blog/post/bug-fixing-docs/</link><pubDate>Sat, 31 Jan 2026 00:00:00 +0000</pubDate><guid>/blog/post/bug-fixing-docs/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
 The Iron Triangle of Fix Documentation
 &lt;/h2&gt;
