@@ -1,0 +1,395 @@
+#+title: Scripting For Profit
+#+author: npalladium
+#+tags[]: bash shell programming
+
+* Scripting?
+Scripts are everywhere, from doing backups of your DB server to S3, listing all the namespaces in a Kubernetes cluster without pods, or simply bootstrapping your environments. A day doesn't go by without writing a new script or at least executing a script I wrote before.
+
+Scripts make life easier. They save time on repetitive tasks. They are ubiquitous.
+
+Having been writing scripts for a while [fn:1], I wanted to write an article to:
+- pen my thoughts and opinions on scripting [fn:2] for "production" (after all, the article is titled "...For Profit");
+- maybe help others (including my future self) by documenting some good scripting hygiene and common pitfalls in one place. [fn:3]
+
+* Shell Scripting on Linux
+If you are writing scripts on Linux, you are probably writing them in a Shell scripting language (Bash, mostly). Even if you've used Python, Ruby, or Node, you've probably still written a Shell script or ten—either out of convenience, or because nothing else was available. The appeal of scripting in Shell probably comes from how you use the same constructs in the interactive commands you run in the Terminal and how easy it is to glue several commands together.
+
+The gluing constructs shell provides (everything-as-text and pipes) mean that if your program is oriented around "commands", nothing beats it [fn:4] [fn:5]. Shell is an excellent Domain Specific Language that is failure tolerant (to a fault) and concise (again to a fault).
+
+* Bashing Bash
+There are several excellent reasons not to use Bash. Some of the oft-cited reasons are:
+- *It is stringly-typed:* Almost all bash variables are strings.
+- *Arcane incantations:* Bash usage is full of abstruse invocations like =$*=, =$#=, and =<()= ([[https://www.gnu.org/software/bash/manual/html_node/Process-Substitution.html][process substitution]]). Short arguments and obscure built-ins are both hard to read and hard to google.
+- *Awkward syntax:* The syntax differs significantly from other popular languages.
+- *Have to use tools:* Bash doesn't have a standard library; it relies on external tools, which can be inefficient and inconsistent across systems.
+- *Environments can differ:* The tools you want may not be installed on your target system, or a subtly different version may behave unexpectedly.
+  - BSD vs GNU anyone? [fn:6]
+
+* Why use Bash?
+- *Ubiquitous:* Bash is available in almost all Linux environments.
+  (Even if Bash isn't available, a POSIX-compliant shell likely is.)
+- *Powerful:* Pipes and the Unix culture of small, composable tools make
+  everyday automation easy.
+
+* Better Bash
+** When not to use Bash
+A part of writing good Bash scripts is knowing when to reach for other
+tools [fn:7]. Consider something other than Bash when:
+- Your script is longer than a few hundred lines.
+- You need rich data structures like hash-maps or nested lists.
+- You have a hard time working around quoting issues.
+- You do a lot of string manipulation or arithmetic.
+- You do not have much need for invoking other programs or pipelining them.
+- You worry about performance or need complex control flow (e.g. nested loops).
+
+*What to use instead:*
+- *Python:* Great syntax and standard library; lacks native YAML support (a pain for DevOps).
+- *Ruby:* Has YAML in the standard library and elegant shell integration. Best when you control all target systems.
+- *Perl:* Powerful text processing; less common today.
+- *zx / bun shell:* JavaScript-based scripting with a modern feel.
+- *Golang:* Excellent for distributing statically compiled binaries that run anywhere.
+- *Language of your choice:* People have used [[https://bitfieldconsulting.com/golang/scripting][Go]], [[https://github.com/rust-shell-script/rust_cmd_lib][Rust]], [[https://zignar.net/2021/07/09/why-haskell-became-my-favorite-scripting-language/][Haskell]] [fn:8], [[https://bellard.org/tcc/][C]], and [[https://www.jbang.dev/][Java]] [fn:9] for scripting.
+- Alternative shells: There are also alternative shells worth knowing about, though I don't personally reach for them — if I'm installing a new tool anyway, I'd rather switch to a full language.
+  + [[https://www.nushell.sh/][Nushell]] treats pipeline output as structured data — tables and typed values — rather than raw text, so you can write =select login contributions= instead of piping through =jq=. 
+  + [[https://www.oilshell.org/][Oil Shell]] takes a compatibility-first approach: its OSH mode runs existing Bash scripts as-is, while YSH layers a cleaner language on top, giving a gentler migration path for legacy scripts.
+
+If I want to replace a bash script, I use Python, Ruby, or Golang. Python is my first choice unless I have to deal with YAML; in that case I use Ruby (for scripts that only run on systems I control) or Golang (for anything else, since I can hand out statically compiled binaries).
+
+*Some reasons you may still prefer Bash:*
+1. You are largely dealing with filesystem operations such as moving, copying, and deleting.
+2. You are gluing external CLI tools.
+3. You are building something iteratively and pipes are amazing.
+4. You cannot guarantee the presence of anything other than a POSIX Shell.
+
+*Alternatives to consider:*
+- Gluing kubectl commands? Consider whether a Golang library or kubectl  plugin is worthwhile.
+- Building iteratively? Look at Notebooks and REPLs. [fn:10]
+- Writing an installation script? Have a binary do the actual  installation; the shell script just figures out the version to download and runs it.
+
+** Questions to ask yourself
+- *How often is this used?* (Throwaway vs. production)
+- *Who is using it?* (Just me vs. the whole team)
+- *Where is it running?* (CI/CD vs. legacy bare metal)
+- *Is this script meant to be run by humans?*
+- *What happens if it fails?* (Minor blip vs. production outage)
+
+** General Programming Hygiene
+- *Modularity:* Use =source= to pull in external configs or functions.
+  + As a personal preference, I tend not to split anything less than 100 lines, unless I need reusable functionality.
+- *Functions:* Group logical steps. Keep the global scope clean.
+- *Readonly & Local:* Use =local= inside functions and a top level =readonly= for constants. Combine them with =local -r= (a Bashism) for variables in functions that should be set once and never mutated:
+  #+begin_src bash
+  process() {
+    local -r input_file="$1"
+    local result
+    result=$(compute "$input_file")
+    echo "$result"
+  }
+  #+end_src
+  + Bash uses a form of dynamic scoping, not lexical scoping — =local= variables are visible to any function called from within the declaring function. This creates two pitfalls worth knowing:
+    * *Silent mutation:* If a child function uses the same variable name without declaring it =local=, it silently reads and writes the parent's variable. Always declare every variable =local= at the top of each function, even "obviously temporary" names like =i=, =line=, or =tmp=.
+    * *=local -r= scope bleed:* A =readonly= local in a parent prevents any child function from declaring its own variable with the same name — Bash will throw =readonly variable= and abort. If child functions might legitimately need the same name, either drop =local -r= or use a naming convention that avoids collisions (e.g. prefix with the function name: =local -r main_config_path=).
+  + Combining declaration and assignment on one line =$?= to 0, because =local= itself is a command and it succeeds even when =cmd= fails.
+- *Idempotency:* A "profitable" script should be safe to run multiple times. Some strategies:
+  + Always recreate/clobber: =mkdir -p=, =touch app.log=, fully recreate config files instead of editing in place etc.
+  + Guard clauses: Check if a configuration line exists before appending it, etc.
+
+** Tackling Readability and Understandability Issues
+- *Comments:* Document the /why/, and the expected inputs, outputs, and environment variables of functions. Comment dependencies at the top of the script.
+- *Long Options:* Use =tar --extract= instead of =tar -x=. Long options are self-documenting. See also: [[https://rachelbythebay.com/w/2021/10/05/cmd/][rachelbythebay on long args]].
+- *Standard Streams:* Send logs and errors to =stderr= (=>&2=) so they don't pollute the data on =stdout=.
+- *Reduce obscure features:* Prefer readable constructs over clever one-liners.
+
+** Blessed Tools
+Set a list of blessed tools that will be used across all your scripts. Ensure that these are installed uniformly across all your environments including dev machines, CI and servers.
+
+You may want different blessed tool sets per environment—a developer laptop can have more tools installed than a minimal CI container or a production server. Document each tier so scripts know what they can rely on.
+
+These are /my/ blessed tools:
+- *POSIX shell built-ins:* Prefer built-ins over external commands for  portability and performance.
+- *curl & jq:* The dynamic duo for API interactions and JSON parsing.
+- *coreutils & moreutils:* Tools like =ts= (timestamps) and =sponge= (reading and writing to the same file safely).
+
+** Unofficial Strict Mode
+Every production script should start with:
+
+#+begin_src bash
+set -o errexit -o nounset -o pipefail
+#+end_src
+
+** Debugging
+*** Syntax Check Without Running
+Use =bash -n= to check for syntax errors without executing:
+#+begin_src bash
+bash -n my-script.sh
+#+end_src
+
+*** Tracing Execution
+=set -o xtrace= (or =set -x=) prints each command before running it. Use =set +x= to limit tracing to a specific section:
+#+begin_src bash
+set -x
+some_function "$arg"
+set +x
+#+end_src
+
+Customize =PS4= to include the script name, function, and line number in traces:
+#+begin_src bash
+export PS4='+(${BASH_SOURCE[0]##*/}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+#+end_src
+
+To avoid trace output mixing with stderr, redirect it to a dedicated file:
+#+begin_src bash
+exec {BASH_XTRACEFD}>/tmp/trace.log
+set -x
+#+end_src
+
+*** Error Context
+Add a =trap= on =ERR= to print the line number whenever a command fails — pairs well with the unofficial strict mode:
+#+begin_src bash
+trap 'echo "Error on line $LINENO" >&2' ERR
+#+end_src
+
+** Concurrency
+*** Background Jobs
+Append =&= to run a command in the background. Use =wait= to block until all background jobs finish:
+#+begin_src bash
+for file in *.log; do
+  process_file "$file" &
+done
+wait
+#+end_src
+
+To catch failures, capture each job's PID with =$!= and wait on it explicitly:
+#+begin_src bash
+cmd1 & pid1=$!
+cmd2 & pid2=$!
+wait "$pid1" || log_error "cmd1 failed"
+wait "$pid2" || log_error "cmd2 failed"
+#+end_src
+
+For CPU-bound work, cap parallelism with =xargs -P=:
+#+begin_src bash
+printf '%s\n' *.log | xargs -P4 -I{} process_file {}
+#+end_src
+
+*** Preventing Concurrent Execution
+Use =flock= to ensure only one instance of a script runs at a time — essential for cron jobs and shared automation:
+#+begin_src bash
+exec 9>/var/lock/my-script.lock
+flock --nonblock 9 || { log_error "Another instance is already running."; exit 1; }
+#+end_src
+
+The lock is released automatically when the script exits or crashes, so no cleanup is needed.
+
+** A Few Other Recommendations
+- Check the Bash version at runtime if you rely on version-specific features.
+- Check that required tools are installed before using them.
+** A Bit More Paranoia
+- Check versions of tools, not just their presence.
+- Check available disk space before writing large files.
+- Check permissions on files before reading or modifying them.
+
+** Scripting with LLMs
+LLMs meaningfully change the tradeoffs around Bash. One of the strongest arguments against it was the arcane syntax: cryptic special variables like =$IFS=, =$*=, and =<()=, short flags, and obscure built-ins are hard to read and even harder to look up. You can now paste a line you don't understand into an LLM and get an explanation in seconds. [fn:11]
+
+*** Helping Agents Work in Your Repo
+LLMs confidently produce subtly incorrect quoting, miss =pipefail= edge cases, or generate code that works on GNU but fails on BSD. If you use coding agents in a repository that contains shell scripts, create an =AGENTS.md= (or =CLAUDE.md= for Claude Code) at the root. Document:
+- Which shell is expected (=bash=, POSIX =sh=, etc.) and the minimum version.
+- Conventions: long options, quoting style, logging functions.
+- How to validate scripts (e.g. =shellcheck *.sh=).
+- How to run tests if you use [[https://github.com/bats-core/bats-core][BATS]].
+
+From this article, the blessed tools list, and the unofficial strict mode line are all worth copying verbatim into your =AGENTS.md=.
+
+Example:
+#+begin_src markdown
+## Shell Scripts
+- Use Bash 4+. All scripts must pass `shellcheck`.
+- Use long options (`--verbose`, not `-v`) for readability.
+- Source `lib/logging.sh` for log_info / log_error.
+- Run tests: `bats tests/`
+#+end_src
+
+-----
+
+* The "Pro-Profit" Template
+If you are writing a script for a production environment, don't start
+from a blank file. Use a template that handles the "boring stuff" like
+logging, cleanup, and error handling.
+
+NOTE: This template was generated by Claude Code after examining my current scripts and then manually reviewed.
+
+#+begin_src bash
+#!/usr/bin/env bash
+# Env shebang is especially useful on macOS where newer versions of Bash are installed via Homebrew.
+
+# --- Unofficial Strict Mode ---
+set -o errexit  # Exit on error
+set -o nounset  # Exit on unset variables
+set -o pipefail # Catch errors in pipelines
+
+# `set -o errexit -o nounset -o pipefail` is my preferred form
+# `set -euxo pipefail` incantation fails my readability check.
+
+# --- Constants & Global Variables ---
+SCRIPT_NAME=$(basename "$0")
+readonly SCRIPT_NAME
+TMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/${SCRIPT_NAME}.XXXXXX")
+readonly TMP_DIR
+
+# --- Cleanup Logic ---
+# Trap signals to ensure temporary files are deleted even on crash/interrupt
+cleanup() {
+  rm -rf "$TMP_DIR"
+  log_info "Cleanup complete. Temp files removed."
+}
+trap cleanup EXIT
+
+# --- Logging Functions ---
+# Send all logs to stderr so stdout stays clean for data
+# TODO: Consider supporting NO_COLOR
+log_info()  { printf "\e[32m[INFO]\e[0m %s\n" "$*" >&2; }
+log_error() { printf "\e[31m[ERROR]\e[0m %s\n" "$*" >&2; }
+
+# --- Usage Function ---
+usage() {
+  cat <<EOF
+Usage: ${SCRIPT_NAME} [options] <input_file>
+
+Options:
+    -h, --help      Display this help message
+    -v, --verbose   Enable verbose logging
+
+Example:
+    ${SCRIPT_NAME} --verbose data.txt
+EOF
+  exit 1
+}
+
+# --- Argument Parsing ---
+parse_params() {
+    :
+# TODO: Implement actual parsing logic.
+}
+
+# --- Main Logic ---
+main() {
+  parse_params "$@"
+
+  log_info "Starting script execution..."
+  log_info "Working in temporary directory: ${TMP_DIR}"
+
+  # Your logic goes here...
+}
+
+main "$@"
+#+end_src
+
+-----
+
+* Common Pitfalls and Workarounds
+- *Spaces around assignment:* Use =VAR=1=, not =VAR = 1=.
+- *Sponge on files:* Avoid truncating files by using =sponge= from moreutils when reading and writing to the same file.
+- *Shellcheck & Shellharden:* Never ship a script without running it through [[https://www.shellcheck.net/][Shellcheck]]. Consider [[https://github.com/anordal/shellharden][Shellharden]] for auto-fixing quoting issues.
+
+* A Note About POSIX Compatibility
+While POSIX compliance ensures maximum portability, it is often harder to write safely. Since Bash is nearly universal in modern DevOps environments, it is usually better to leverage Bash-specific features for safety (like =[[= and arrays) unless you specifically target minimal environments like Alpine (Ash) or BusyBox.
+
+* Examples
+- [[https://gitlab.com/gitlab-org/cluster-integration/auto-deploy-image/-/blob/master/src/bin/auto-deploy][GitLab Auto Deploy]]
+- [[https://github.com/bitnami/containers/tree/main/bitnami/postgresql/16/debian-12/rootfs/opt/bitnami/scripts][Bitnami Container Scripts]]
+- [[https://github.com/bitnami/containers/blob/main/bitnami/neo4j/5/debian-12/prebuildfs/opt/bitnami/scripts/liblog.sh][Bitnami Neo4j liblog.sh]]
+- [[https://clickhouse.com][Clickhouse Install]] (=curl= it to see).
+- [[https://get.volta.sh/][Volta Install Script]]
+
+* Misc. Tips
+** Make Anything Executable
+You can use any binary as a script interpreter with a shebang. For example, to use a Kubernetes manifest as an executable:
+
+#+begin_src bash
+#!/usr/bin/env -S istioctl upgrade --verify --filename
+#+end_src
+
+** Python Scripts with =uv=
+[[https://docs.astral.sh/uv/][uv]] makes Python scripts behave more like shell scripts. Use =uvx= to run a tool without installing it:
+#+begin_src bash
+uvx ruff check .
+#+end_src
+
+For scripts with dependencies, use a =uv run= shebang with [[https://peps.python.org/pep-0723/][PEP 723]] inline metadata:
+#+begin_src python
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = ["requests"]
+# ///
+import requests
+...
+#+end_src
+
+=uv= resolves and caches the virtualenv on first run. The script is self-contained and portable to any machine with =uv= installed.
+
+** An Installation Strategy
+- Your tool has an install command that does the actual installation.
+- A shell script just figures out the version to download, downloads the binary, and executes it.
+** Date
+Use the ISO 8601 format for log timestamps:
+
+#+begin_src bash
+date --iso-8601=seconds
+#+end_src
+The above command is a classic example of inconsistency across BSD and GNU. You'll have to use something like =date +'%Y-%m-%dT%H:%M:%S%z'= for it to work across macOS and Linux.
+* A Reading List
+** Learning Bash
+- [[https://hyperpolyglot.org/unix-shells][Unix Shells]]: A summary of the features of various Unix shells such as  Bash, Fish, Ksh, and Zsh.
+- [[https://v4.software-carpentry.org/shell/index.html][Software Carpentry: The Unix Shell]]: Extremely beginner-friendly introduction to the shell.
+- [[https://earthly.dev/blog/bash-variables/][Understanding Bash Variables]]
+- [[https://blog.balthazar-rouberol.com/text-processing-in-the-shell][Text Processing in the Shell]]: Commonly available Unix tools for text processing.
+- [[https://web.archive.org/web/20210916210855/http://cb.vu/unixtoolbox.xhtml][Unix Tools]]: Concise coverage of Unix tools.
+** Learning POSIX Sh
+- [[https://www.grymoire.com/Unix/Sh.html][Grymoire's Tutorial on the POSIX Shell]]: A comprehensive POSIX shell tutorial. Grymoire also has excellent tutorials on [[https://www.grymoire.com/Unix/Regular.html][Regular Expressions]].
+
+** Pitfalls
+- [[https://wiki.bash-hackers.org/scripting/newbie_traps][Beginner Mistakes]]: Typical beginner mistakes while writing Bash scripts.
+- [[http://mywiki.wooledge.org/BashPitfalls][Bash Pitfalls]]: A collection of common Bash mistakes.
+- [[http://www.pixelbeat.org/programming/shell_script_mistakes.html][Shell Script Mistakes]]
+- [[https://blog.janestreet.com/when-bash-scripts-bite/][When Bash Scripts Bite]]: An unexpected issue with the unofficial strict mode.
+- [[https://thomask.sdf.org/blog/2019/11/09/take-care-editing-bash-scripts.html][Take Care Editing Bash Scripts]]: What happens when you edit a running script.
+- [[https://rachelbythebay.com/w/2020/08/11/files/][File Handling in Unix]]: Pitfalls and tips surrounding file handling.
+
+** Writing Better Bash
+- [[https://jonlabelle.com/snippets/view/markdown/defensive-bash-programming][Defensive BASH Programming]]: A well-commented template for defensive bash scripts.
+- [[https://zwischenzugs.com/2018/01/06/ten-things-i-wish-id-known-about-bash/][Ten Things I Wish I'd Known About Bash]]
+- [[https://saveriomiroddi.github.io/Additional-shell-options-for-non-trivial-bash-shell-scripts/][Additional Shell Options for Non-Trivial Scripts]]: An extension to the unofficial strict mode.
+- [[https://github.com/anordal/shellharden/blob/master/how_to_do_things_safely_in_bash.md][Safe Ways to Do Things in Bash]]
+- [[https://www.davidpashley.com/articles/writing-robust-shell-scripts/][Writing Robust Bash Shell Scripts]]
+- [[https://blog.yossarian.net/2020/01/23/Anybody-can-write-good-bash-with-a-little-effort][Anybody Can Write Good Bash]]
+- [[https://google.github.io/styleguide/shellguide.html][Google Shell Style Guide]]
+
+** Snippets
+- [[http://www.etalabs.net/sh_tricks.html][Rich's sh (POSIX shell) tricks]]: A collection of POSIX sh snippets for common tasks.
+- [[https://github.com/dylanaraps/pure-bash-bible][Pure Bash Bible]] and [[https://github.com/dylanaraps/pure-sh-bible][Pure Sh Bible]]: Pure bash/sh alternatives to external processes.
+- [[https://github.com/onceupon/Bash-Oneliner][Bash-Oneliner]]: Handy Bash one-liners for data processing and system maintenance.
+
+** Miscellaneous
+- [[https://en.wikipedia.org/wiki/List_of_GNU_Core_Utilities_commands][List of GNU Core Utilities Commands]]
+- [[https://github.com/denysdovhan/bash-handbook][Bash Handbook]]
+- [[https://joeyh.name/code/moreutils/][Moreutils]]: "A collection of the unix tools that nobody thought to write long ago when unix was young."
+  + I heavily use of =ts= (like =ping 8.8.8.8 | ts "%Y-%m-%dT%H:%M:%S%Z"=) and =vipe=.
+- [[https://catonmat.net/bash-functions][Something You Didn't Know About Functions in Bash]]
+- [[https://github.com/bats-core/bats-core][BATS (Bash Automated Testing System)]]
+
+-----
+
+* Footnotes
+
+[fn:1] For about five years now, which is not all that long considering bash is over three decades old.
+[fn:2] This article is mostly about Bash Scripting but my points should generalize to other Shells too.
+[fn:3] I started writing this article over a year ago and sat on it for a while. The two most meaningful changes in the landscape since then: [[https://docs.astral.sh/uv/][uv]], which makes Python a much more practical scripting language, and LLMs, which dramatically reduce the friction of understanding arcane Bash syntax.
+[fn:4] [[http://catb.org/~esr/writings/unix-koans/ten-thousand.html][Master Foo and the Ten Thousand Lines]]
+[fn:5] [[http://www.leancrew.com/all-this/2011/12/more-shell-less-egg/][Knuth vs McIlroy]]
+[fn:6] Most Linux distributions ship GNU coreutils, while macOS ships BSD-derived tools. The two often differ in flag names, default behaviours, and supported options — for example, =date --iso-8601= works on GNU but not on BSD =date=. FreeBSD, OpenBSD, and NetBSD also ship BSD tools. If your scripts must run on both Linux and macOS, either install GNU coreutils on macOS (via Homebrew: =brew install coreutils=) or write to the lowest common denominator using POSIX-specified behaviour only.
+[fn:7] [[https://knowyourmeme.com/memes/roll-safe][You won't have any bad bash scripts if you don't write bash]]
+[fn:8] Libraries like [[https://hackage.haskell.org/package/turtle][Turtle]] and [[https://hackage.haskell.org/package/shelly][Shelly]] give Haskell a pipeline-friendly scripting style. Because Haskell's type inference covers the whole program without much annotation, scripts stay concise while the compiler catches errors — wrong path types, malformed date strings — that Bash would only surface at runtime.
+[fn:9] Since Java 11, single-file programs run directly with =java MyScript.java=, no explicit compilation step needed. Java 21+ goes further: unnamed classes and instance =main= methods ([[https://openjdk.org/jeps/445][JEP 445]]) drop the =public class= and =public static void main= boilerplate, making small programs look much more like scripts. [[https://www.jbang.dev/][JBang]] adds a shebang line and inline dependency declarations on top of this, making it practical to reuse existing Java libraries and share logic with Java-based services.
+[fn:10] [[https://jupyter.org/][Jupyter]] notebooks are the standard for iterative, exploratory work. [[https://papermill.io/][Papermill]] takes this further by letting you parameterise and execute notebooks as pipeline steps — useful when you want the interactivity of a notebook during development but repeatable, auditable runs in production.
+[fn:11] [[https://explainshell.com/][explainshell.com]] predates LLMs and does one thing well: paste any shell command and it annotates each flag and argument against the relevant man page. Still useful for a quick, authoritative breakdown without the hallucination risk.
