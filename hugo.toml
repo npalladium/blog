@@ -10,8 +10,8 @@ enableGitInfo = true
   lastmod  = [":git", ":fileModTime", "lastmod", "date"]
 
 [params]
-  author     = "n"
-  footer     = "© 2026 n"
+  author     = "npalladium"
+  footer     = "© 2026 npalladium"
   dateFormat = "2006-01-02"
 
 [markup]
