@@ -1,0 +1,59 @@
+#+TITLE: Deployment Strategies for Small Teams That Actually Work
+#+AUTHOR: Nikhil Reddy
+#+DATE: 2026-01-31
+* Core Principles
+- Hard to Mess Up: Guard against fat fingers and tolerate infrastructure hiccups. A deploy that runs twice should produce the same result, not two versions of a service fighting over migrations in an infinite loop—which is exactly what happened when we accidentally deployed two versions to places that were supposed to be in lockstep, and they ran up and down migrations to reconcile forever. Account for partial failures and transient outages too; the system should absorb mistakes, not amplify them.
+- 2AM Fixable: Clear error messages, obvious rollback procedures, good logging, and simple architecture. The best 2 AM fix is often "revert to the last known good version." Make that trivial to do.
+- Hand-off-able: Standard tooling, few or no clever tricks. Common tasks automated, both SOPs and gotchas documented. A new team member should be able to deploy without a brain dump from the person who set it up.
+- Cost-Conscious: Don't spin up a Kubernetes cluster for a service that runs fine on a single box. Question whether the infrastructure is hiding problems or solving them.
+** What that means
+- Automated: Manual deployment steps are bugs waiting to happen. Every deployment should be triggered by a single command or git push. No SSH-ing into servers to run commands in sequence. No "remember to restart this service after that one." Automation catches mistakes that humans make when tired or rushed. It also serves as living documentation—the deployment script shows exactly what happens, in what order.
+- Immutable and Declarative: Don't patch running systems—replace them. Build a new image with Docker or Packer, deploy it, tear down the old one. Pair that with a declarative desired-state system that's idempotent: describe what you want, let the tooling converge to it, and run it again without fear of side effects.
+* Docker Compose/Podman Quadlets on a Single Server
+This is my go-to recommendation for teams just starting out or running low-traffic services.
+** Why It Works
+Easy enough to maintain without a dedicated ops person. You get isolation between services, straightforward configuration, and the ability to deploy multiple applications on one box. Perfect for the Hetzner dedicated server or colocation setup that gives you solid hardware at reasonable prices.
+** The Registry Trick
+Here's something teams often miss: chuck your base images and the image layer just before adding your application code into your own registry. This gives you reproducibility and faster deploys. When you need to rebuild, you're not pulling Node or Python base images from Docker Hub every time—you've got them cached in your own registry.
+** SQLite Is Fine, Actually
+For most small team applications, just use SQLite. Seriously. It handles more load than you think, eliminates an entire class of deployment complexity, and makes backups trivial. You can always migrate later if you actually need to, but chances are you won't. The ceiling is when you need multiple app servers or a separated database machine—at that point you've outgrown SQLite and the single-server setup together.
+* Systemd Services with Proper Isolation
+This approach is harder to maintain but works reliably once you've set it up correctly.
+
+You're running your applications directly as systemd services, using systemd's isolation features (DynamicUser, PrivateTmp, ProtectSystem, etc.) to sandbox your processes. No containers, just good old Linux process isolation.
+
+The advantage is simplicity—no container runtime, no image builds, just binaries and configuration files. Systemd's sandboxing features also mean a runaway process can't trash the rest of the system. The disadvantage is that you need to handle dependencies, library versions, and environment setup yourself. This works well for Go or Rust applications that compile to static binaries, less well for dynamic language stacks with complex dependencies.
+
+* Nix + Systemd
+Nix brings reproducible builds and declarative configuration to the systemd services approach.
+** Advantages
+Complete reproducibility—your entire system configuration is in version control. Atomic rollbacks when deployments go wrong. No dependency conflicts between applications. Built-in development environment matching production.
+** Requirements
+This only works if you have a Nix expert on the team and everyone is willing to learn. The learning curve is steep, the ecosystem is rough around the edges, and I personally haven't been able to justify introducing it to a team. But if you already have the expertise, the reproducibility payoff is real.
+* Docker Compose for Stateless + Separate Machines for Databases
+This is the first step toward separating concerns in your infrastructure.
+** Why This Works
+Your stateless application containers are easy to recreate, redeploy, and scale horizontally. Your databases and storage systems need more care—proper backups, replication, monitoring. By running them on separate machines (or using managed services), you're acknowledging this difference.
+** The Latency Trade-off
+Yes, you've added network latency between your app and database. For most applications, this is 1-3ms on the same provider's network. It's not going to kill your performance, and it's worth the operational simplicity of not having your database container competing for resources with your application.
+* Container Runners + Managed Databases
+This is what I suggest to most teams once they're beyond the single-server phase.
+
+Use services like AWS ECS, Google Cloud Run, or Azure Container Apps for your application containers. Pair them with managed database services (RDS, Cloud SQL, Azure Database). You get automatic scaling, load balancing, and health checks without running Kubernetes.
+
+Cloud Run in particular is excellent for small teams—you pay only for actual request time, it scales to zero, and deploys are straightforward. ECS gives you more control if you need it. Both are dramatically simpler than running your own orchestration.
+
+The managed database is non-negotiable at this level. You don't want to be the one responding to disk full alerts at 2 AM or debugging replication lag.
+* Kubernetes: The Last Resort (Kind Of)
+I list K8s last because most small teams don't need it, but there's a caveat: the ecosystem of Helm charts and operators is genuinely lovely. I spent days trying to set up a Cassandra cluster on bare metal; with a Kubernetes operator I had one running in a few hours, and managing it was dramatically easier. CloudNativePG is another great example. Helm charts and operators encode operational expertise as code in a way that isn't really available on other deployment platforms, and the Kubernetes API makes writing operators straightforward.
+
+If you're deploying standard infrastructure components (monitoring, logging, service mesh, databases for development), this ecosystem can save massive amounts of time. But you're also taking on the operational burden of Kubernetes itself—and that's substantial.
+
+Only go this route if you have specific requirements that simpler solutions can't meet, or if someone on your team already knows K8s well. The complexity tax is real.
+* Conclusion
+Start simple. A single server with Docker Compose will take you further than you expect. Add complexity only when you have specific problems to solve, not because it feels more "professional." The best deployment strategy is the one your team can actually maintain at 3 AM when something breaks.
+
+* Refs
+- [[https://www.infoq.com/presentations/Simple-Made-Easy/][Simple Made Easy]] — Rich Hickey
+- [[https://surfingcomplexity.blog/2017/06/24/a-conjecture-on-why-reliable-systems-fail/][A Conjecture on Why Reliable Systems Fail]] — Lorin Hochstein. Reliable systems tend to fail because of manual interventions meant to fix minor incidents, or unexpected behavior of subsystems designed to improve reliability.
+- [[https://boringtechnology.club/][Choose Boring Technology]]
