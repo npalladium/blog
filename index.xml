@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>npalladium</title><link>https://example.com/</link><description>Recent content on npalladium</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Tue, 05 May 2026 21:20:56 +0530</lastBuildDate><atom:link href="https://example.com/index.xml" rel="self" type="application/rss+xml"/><item><title>Deployment Strategies for Small Teams That Actually Work</title><link>https://example.com/post/small-deployment-strategies/</link><pubDate>Sat, 31 Jan 2026 00:00:00 +0000</pubDate><guid>https://example.com/post/small-deployment-strategies/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>npalladium</title><link>https://npalladium.github.io/blog/</link><description>Recent content on npalladium</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Tue, 05 May 2026 21:20:56 +0530</lastBuildDate><atom:link href="https://npalladium.github.io/blog/index.xml" rel="self" type="application/rss+xml"/><item><title>Deployment Strategies for Small Teams That Actually Work</title><link>https://npalladium.github.io/blog/post/small-deployment-strategies/</link><pubDate>Sat, 31 Jan 2026 00:00:00 +0000</pubDate><guid>https://npalladium.github.io/blog/post/small-deployment-strategies/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
 Core Principles
 &lt;/h2&gt;
@@ -27,7 +27,7 @@ What that means
 Docker Compose/Podman Quadlets on a Single Server
 &lt;/h2&gt;
 &lt;div id="outline-text-headline-3" class="outline-text-2"&gt;
-&lt;p&gt;This is my go-to recommendation for teams just starting out or running low-traffic services.&lt;/p&gt;</description></item><item><title>Things I've Come to Believe In: A Technical Stack Confession</title><link>https://example.com/post/things-i-believe-in/</link><pubDate>Tue, 05 May 2026 20:56:16 +0530</pubDate><guid>https://example.com/post/things-i-believe-in/</guid><description>&lt;p&gt;
+&lt;p&gt;This is my go-to recommendation for teams just starting out or running low-traffic services.&lt;/p&gt;</description></item><item><title>Things I've Come to Believe In: A Technical Stack Confession</title><link>https://npalladium.github.io/blog/post/things-i-believe-in/</link><pubDate>Tue, 05 May 2026 20:56:16 +0530</pubDate><guid>https://npalladium.github.io/blog/post/things-i-believe-in/</guid><description>&lt;p&gt;
 These aren&amp;#39;t religious convictions—I won&amp;#39;t argue about them at parties (maybe at KubeCon)—but they&amp;#39;ve proven themselves reliable enough that I reach for them by default.&lt;/p&gt;
 &lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
@@ -47,7 +47,7 @@ Driving Principles
 Containers
 &lt;/h2&gt;
 &lt;div id="outline-text-headline-2" class="outline-text-2"&gt;
-&lt;p&gt;&lt;em&gt;2 AM Fixable, No toil&lt;/em&gt;&lt;/p&gt;</description></item><item><title>Share Resources, Allow Them to Split</title><link>https://example.com/post/share-and-split-resources/</link><pubDate>Tue, 05 May 2026 00:00:00 +0000</pubDate><guid>https://example.com/post/share-and-split-resources/</guid><description>&lt;p&gt;
+&lt;p&gt;&lt;em&gt;2 AM Fixable, No toil&lt;/em&gt;&lt;/p&gt;</description></item><item><title>Share Resources, Allow Them to Split</title><link>https://npalladium.github.io/blog/post/share-and-split-resources/</link><pubDate>Tue, 05 May 2026 00:00:00 +0000</pubDate><guid>https://npalladium.github.io/blog/post/share-and-split-resources/</guid><description>&lt;p&gt;
 There&amp;#39;s a quiet design principle that pays for itself many times over in microservice architectures:&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;&lt;strong&gt;Share infrastructure resources where you can. Write services as if you weren&amp;#39;t.&lt;/strong&gt;&lt;/p&gt;
@@ -58,7 +58,7 @@ The two halves of the principle pull in different directions on purpose:&lt;/p&g
 &lt;li&gt;&lt;strong&gt;Sharing&lt;/strong&gt; is what you do at deployment time, to keep operational cost and complexity down.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Splitting-readiness&lt;/strong&gt; is what you do at design time, to keep your future options open.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;A service that&amp;#39;s been written correctly doesn&amp;#39;t know or care whether its bucket, its database, or its domain is shared with five other services or entirely its own. That ignorance is the feature. This is a specific instance of the rule behind Bezos&amp;#39; famous API mandate: all service communication goes through published interfaces; everything else—shared memory, direct linking, back doors—is forbidden. Two services sharing a bucket is an operational convenience; one service &lt;em&gt;knowing&lt;/em&gt; it shares a bucket is a coupling that bypasses the service contract.&lt;/p&gt;</description></item><item><title>CLI Tools</title><link>https://example.com/post/cli-tools/</link><pubDate>Sat, 14 Mar 2026 22:53:18 +0530</pubDate><guid>https://example.com/post/cli-tools/</guid><description>&lt;ul&gt;
+&lt;p&gt;A service that&amp;#39;s been written correctly doesn&amp;#39;t know or care whether its bucket, its database, or its domain is shared with five other services or entirely its own. That ignorance is the feature. This is a specific instance of the rule behind Bezos&amp;#39; famous API mandate: all service communication goes through published interfaces; everything else—shared memory, direct linking, back doors—is forbidden. Two services sharing a bucket is an operational convenience; one service &lt;em&gt;knowing&lt;/em&gt; it shares a bucket is a coupling that bypasses the service contract.&lt;/p&gt;</description></item><item><title>CLI Tools</title><link>https://npalladium.github.io/blog/post/cli-tools/</link><pubDate>Sat, 14 Mar 2026 22:53:18 +0530</pubDate><guid>https://npalladium.github.io/blog/post/cli-tools/</guid><description>&lt;ul&gt;
 &lt;li&gt;clig.dev&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://learn.microsoft.com/en-us/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands?view=powershell-7.4"&gt;Approved Verbs for PowerShell Commands - PowerShell | Microsoft Learn&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://simblob.blogspot.com/2019/10/verb-noun-vs-noun-verb.html"&gt;Blobs in Games: Verb-noun vs noun-verb&lt;/a&gt;&lt;/li&gt;
@@ -72,7 +72,7 @@ The two halves of the principle pull in different directions on purpose:&lt;/p&g
 &lt;ul&gt;
 &lt;li&gt;Consider having &lt;code class="verbatim"&gt;command --man&lt;/code&gt; which open man page.&lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;If a user of your CLI tool has explicitly requested the built-in help text via –help (or an equivalent switch that requests help) then that help text shall be output on stdout.&lt;/p&gt;</description></item><item><title>Autocorrect helps unravel what little is left of my sanity</title><link>https://example.com/post/autocorrect/</link><pubDate>Sat, 28 Feb 2026 18:33:33 +0530</pubDate><guid>https://example.com/post/autocorrect/</guid><description>&lt;p&gt;
+&lt;p&gt;If a user of your CLI tool has explicitly requested the built-in help text via –help (or an equivalent switch that requests help) then that help text shall be output on stdout.&lt;/p&gt;</description></item><item><title>Autocorrect helps unravel what little is left of my sanity</title><link>https://npalladium.github.io/blog/post/autocorrect/</link><pubDate>Sat, 28 Feb 2026 18:33:33 +0530</pubDate><guid>https://npalladium.github.io/blog/post/autocorrect/</guid><description>&lt;p&gt;
 I’m the world’s most frustrated man, &lt;br&gt;
 My brain is fried, my thumbs are weak. &lt;br&gt;
 I thought more AI would solve my problem, &lt;br&gt;
@@ -85,7 +85,7 @@ The things I actually wanted to say.&lt;/p&gt;
 &lt;p&gt;Omakes:&lt;/p&gt;
 &lt;p&gt;
 &amp;gt; I thought more AI would solve my problem, &lt;br&gt;
-&amp;gt; But it crushes the words I speak.&lt;/p&gt;</description></item><item><title>Scripting For Profit</title><link>https://example.com/post/bash/</link><pubDate>Sat, 28 Feb 2026 18:20:31 +0530</pubDate><guid>https://example.com/post/bash/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
+&amp;gt; But it crushes the words I speak.&lt;/p&gt;</description></item><item><title>Scripting For Profit</title><link>https://npalladium.github.io/blog/post/bash/</link><pubDate>Sat, 28 Feb 2026 18:20:31 +0530</pubDate><guid>https://npalladium.github.io/blog/post/bash/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
 Scripting?
 &lt;/h2&gt;
@@ -94,7 +94,7 @@ Scripting?
 &lt;p&gt;
 Scripts make life easier. They save time on repetitive tasks. They are ubiquitous.&lt;/p&gt;
 &lt;p&gt;
-Having been writing scripts for a while &lt;sup class="footnote-reference"&gt;&lt;a id="footnote-reference-1" href="#footnote-1"&gt;1&lt;/a&gt;&lt;/sup&gt;, I wanted to write an article to:&lt;/p&gt;</description></item><item><title>Writing Issue-Fixing Documentation That Actually Fixes Issues</title><link>https://example.com/post/bug-fixing-docs/</link><pubDate>Sat, 31 Jan 2026 00:00:00 +0000</pubDate><guid>https://example.com/post/bug-fixing-docs/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
+Having been writing scripts for a while &lt;sup class="footnote-reference"&gt;&lt;a id="footnote-reference-1" href="#footnote-1"&gt;1&lt;/a&gt;&lt;/sup&gt;, I wanted to write an article to:&lt;/p&gt;</description></item><item><title>Writing Issue-Fixing Documentation That Actually Fixes Issues</title><link>https://npalladium.github.io/blog/post/bug-fixing-docs/</link><pubDate>Sat, 31 Jan 2026 00:00:00 +0000</pubDate><guid>https://npalladium.github.io/blog/post/bug-fixing-docs/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
 The Iron Triangle of Fix Documentation
 &lt;/h2&gt;
@@ -111,7 +111,7 @@ Pre-Flight Check: Confirming You Have the Right Problem
 &lt;li&gt;Symptoms that distinguish this from similar issues&lt;/li&gt;
 &lt;li&gt;Version numbers, environment details, or configuration states&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Remember what every old hand knows: Half of support tickets are people applying the wrong fix to the right problem. The other half are people applying the right fix to the wrong problem.&lt;/p&gt;</description></item><item><title>About</title><link>https://example.com/about/</link><pubDate>Fri, 27 Feb 2026 23:55:25 +0530</pubDate><guid>https://example.com/about/</guid><description>&lt;p&gt;Welcome to a small corner of the internet where the READMEs are rhapsodic and the poetry is pull-requested.&lt;/p&gt;</description></item><item><title>Hello, World</title><link>https://example.com/post/hello-world/</link><pubDate>Fri, 27 Feb 2026 00:00:00 +0000</pubDate><guid>https://example.com/post/hello-world/</guid><description>&lt;p&gt;
+&lt;p&gt;Remember what every old hand knows: Half of support tickets are people applying the wrong fix to the right problem. The other half are people applying the right fix to the wrong problem.&lt;/p&gt;</description></item><item><title>About</title><link>https://npalladium.github.io/blog/about/</link><pubDate>Fri, 27 Feb 2026 23:55:25 +0530</pubDate><guid>https://npalladium.github.io/blog/about/</guid><description>&lt;p&gt;Welcome to a small corner of the internet where the READMEs are rhapsodic and the poetry is pull-requested.&lt;/p&gt;</description></item><item><title>Hello, World</title><link>https://npalladium.github.io/blog/post/hello-world/</link><pubDate>Fri, 27 Feb 2026 00:00:00 +0000</pubDate><guid>https://npalladium.github.io/blog/post/hello-world/</guid><description>&lt;p&gt;
 Welcome to the blog.&lt;/p&gt;
 &lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
@@ -159,7 +159,7 @@ Math plus poetry yields the Fib.&lt;/p&gt;
 &lt;p&gt;
 — Pincus, Gregory K.&lt;/p&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description></item><item><title/><link>https://example.com/post/gateways/</link><pubDate>Wed, 11 Feb 2026 19:19:12 +0530</pubDate><guid>https://example.com/post/gateways/</guid><description>&lt;p&gt;Below is a structured overview of common &lt;strong&gt;API gateway strategies&lt;/strong&gt;, when to use them, and the trade-offs involved.&lt;/p&gt;
+&lt;/div&gt;</description></item><item><title/><link>https://npalladium.github.io/blog/post/gateways/</link><pubDate>Wed, 11 Feb 2026 19:19:12 +0530</pubDate><guid>https://npalladium.github.io/blog/post/gateways/</guid><description>&lt;p&gt;Below is a structured overview of common &lt;strong&gt;API gateway strategies&lt;/strong&gt;, when to use them, and the trade-offs involved.&lt;/p&gt;
 &lt;hr&gt;
 &lt;h1 id="what-is-an-api-gateway"&gt;What Is an API Gateway?&lt;/h1&gt;
 &lt;p&gt;An API gateway sits between clients and backend services. It acts as a reverse proxy and control plane, handling cross-cutting concerns such as:&lt;/p&gt;
@@ -171,14 +171,14 @@ Math plus poetry yields the Fib.&lt;/p&gt;
 &lt;li&gt;Caching&lt;/li&gt;
 &lt;li&gt;Backward compatibility handling&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;It’s especially common in microservice architectures, but not always required.&lt;/p&gt;</description></item><item><title>Keeping Things In Sync (Or Why We Can't Have Good Things)</title><link>https://example.com/post/keeping-things-in-sync/</link><pubDate>Sat, 31 Jan 2026 01:29:32 +0530</pubDate><guid>https://example.com/post/keeping-things-in-sync/</guid><description>&lt;p&gt;
+&lt;p&gt;It’s especially common in microservice architectures, but not always required.&lt;/p&gt;</description></item><item><title>Keeping Things In Sync (Or Why We Can't Have Good Things)</title><link>https://npalladium.github.io/blog/post/keeping-things-in-sync/</link><pubDate>Sat, 31 Jan 2026 01:29:32 +0530</pubDate><guid>https://npalladium.github.io/blog/post/keeping-things-in-sync/</guid><description>&lt;p&gt;
 When you have two related pieces of code that need to stay consistent—say, a data structure and its serialization logic, or an API and its documentation—you face a fundamental problem: how do you keep them from drifting apart? The answer depends on how much you trust yourself (or your teammates) and how much pain you&amp;#39;re willing to endure when things inevitably go wrong.&lt;/p&gt;
 &lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
 The Cowboy Approach
 &lt;/h2&gt;
 &lt;div id="outline-text-headline-1" class="outline-text-2"&gt;
-&lt;p&gt;Just… don&amp;#39;t worry about it. Write your struct, write your JSON handler, ship it. If they drift apart, you&amp;#39;ll find out in production when a customer complains. This works great until it doesn&amp;#39;t, which is usually around 2 AM on a Friday.&lt;/p&gt;</description></item><item><title>Config</title><link>https://example.com/post/config/</link><pubDate>Wed, 15 Oct 2025 14:14:59 +0530</pubDate><guid>https://example.com/post/config/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
+&lt;p&gt;Just… don&amp;#39;t worry about it. Write your struct, write your JSON handler, ship it. If they drift apart, you&amp;#39;ll find out in production when a customer complains. This works great until it doesn&amp;#39;t, which is usually around 2 AM on a Friday.&lt;/p&gt;</description></item><item><title>Config</title><link>https://npalladium.github.io/blog/post/config/</link><pubDate>Wed, 15 Oct 2025 14:14:59 +0530</pubDate><guid>https://npalladium.github.io/blog/post/config/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
 Writing
 &lt;/h2&gt;
