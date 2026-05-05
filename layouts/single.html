@@ -3,7 +3,7 @@
 <h1><span class="title">{{ .Title | markdownify }}</span></h1>
 {{ if .Section -}}
 {{- $authors := slice -}}
-{{- with .Params.authors }}{{ $authors = . }}{{ else }}{{ with .Params.author }}{{ $authors = slice . }}{{ else }}{{ with $.GitInfo }}{{ $authors = slice .AuthorName }}{{ end }}{{ end }}{{ end -}}
+{{- with .Params.authors }}{{ $authors = . }}{{ else }}{{ with .Params.author }}{{ $authors = slice . }}{{ else }}{{ with .Site.Params.author }}{{ $authors = slice . }}{{ end }}{{ end }}{{ end -}}
 {{ with $authors }}<p class="authors">{{ delimit . ", " }}</p>{{ end }}
 {{ if not .Date.IsZero -}}
   {{- $created := .Date.Format .Site.Params.dateFormat -}}
