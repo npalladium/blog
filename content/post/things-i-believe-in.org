@@ -1,0 +1,89 @@
+#+title: Things I've Come to Believe In: A Technical Stack Confession
+
+These aren't religious convictions—I won't argue about them at parties (maybe at KubeCon)—but they've proven themselves reliable enough that I reach for them by default.
+
+* Driving Principles
+- No complexity cliff: Simple things should be easy. You should only pay the complexity cost that you need. I watched a system that should have been a single service get split across multiple services communicating over a message bus—none of it necessary. Debugging a request became an archaeological dig, and deploying without breaking a consumer became nearly impossible. Introduce complexity progressively, when you hit a concrete wall, not before.
+- 2 AM Fixable and Handoff-able: You can fix it half-asleep and hand it off to the next person without a brain dump. We self-hosted GitLab once. Someone deleted a live database because it was named badly and protected worse. A managed service wouldn't have prevented all human error, but it would have absorbed the class of failure we spent that morning firefighting.
+- Cost Conscious: Not just "keep the bill low"—question whether the infrastructure is hiding problems. We moved a low-traffic deployment from standard Kubernetes to k3s on a single node of the same instance type. Cost dropped, but that wasn't the real win—latency went down and throughput went up because the extra networking layers and hops had been adding overhead, and autoscaling had been quietly masking bad tuning for months. The bill was a symptom; the disease was complexity we weren't using.
+- No toil: The aspiration, at least. Automate the repetitive stuff even if you never reach zero. It used to take a full day to get a new cell ready, and it broke in new ways each time because someone forgot a step or accidentally introduced one. I tried automating it, but the automation couldn't keep up with the service sprawl. The toil problem and the complexity cliff problem fed each other.
+* Containers
+/2 AM Fixable, No toil/
+
+Containers solved the "works on my machine" problem, and I'm never going back. The ability to ship an application with its exact runtime dependencies is transformative. (I use Nix btw. Yes, I'm that person. No, my config isn't "almost done."[fn:1])
+
+[fn:1] I use Nix for personal projects, but its flakiness (pun intended) and complexity made it a no-go for introducing to the team.
+* CI/CD
+/No toil, No complexity cliff/
+
+Automated testing on every commit catches bugs before they metastasize. The feedback loop tightens. You stop treating "deploy day" as a special event requiring sacrifice to the ops gods. Whether to automatically deploy is a case-by-case call—depends on security requirements, maturity of the service, and how much you trust the test suite. Either way, keep HEAD deploy-ready and make deploys a one-click thing. Good CI makes shipping boring—which is exactly what you want.
+* Single Page Applications
+/No complexity cliff, Cost Conscious/
+
+Hosting and caching are easy. Append a SHA to your built CSS/JS and cache them indefinitely. Set up your index.html file with a small TTL. And you're sorted. No fiddling about with =Vary= to make sure a tenant doesn't see another's data—server-rendered multi-tenant apps risk CDN cache poisoning if you get the =Vary= header wrong, serving one tenant's page to another. The cost is complexity and initial bundle size, but shrugs[fn:2][fn:3].
+
+[fn:2] But seriously—the real cost: larger initial bundles, client-side routing complexity, SEO gymnastics, and accessibility pitfalls that server-rendered HTML handles for free. These are real trade-offs, not minor inconveniences.
+
+[fn:3] Some newer server-rendering frameworks, combined with CDN caching, make it surprisingly easy to leak one tenant's data to another. In a SPA, the auth boundary lives in API calls you already have to get right. In server-rendered multi-tenant apps, every response is a potential leak surface.
+* Postgres as Primary Database
+/No complexity cliff, 2 AM Fixable/
+
+We used unlogged tables as a cache layer, regular tables for longer-lived caches, and SKIP LOCKED for job queues—all without standing up Redis, Memcached, or a dedicated message broker. That's three fewer systems to monitor, back up, and explain to the on-call engineer at 2 AM. Postgres might not win benchmarks against purpose-built databases, but it absorbs an enormous number of use cases with less operational overhead[fn:4][fn:5][fn:6][fn:7].
+
+[fn:4] ACID compliance, JSON support, full-text search, geospatial queries, powerful indexing, mature replication—Postgres keeps absorbing features that would otherwise require specialized databases. Need a queue? Use SKIP LOCKED. Need pub/sub? Built in. Need time-series data? Extensions exist.
+
+[fn:5] Rails is moving in this direction too—Solid Queue, Solid Cache, and Solid Cable all bet on the database as the single backing store.
+
+[fn:6] The exception that proved the rule: we switched to ClickHouse for heavy time-series analytics. It's a fantastic database for that job, and knowing where Postgres stops reinforced how far it stretches everywhere else.
+
+[fn:7] SQLite deserves a mention here—for single-node deployments and embedded use cases, it carries the same philosophy of "one database, fewer moving parts" even further.
+* Modular Monoliths and Modes
+/No complexity cliff, 2 AM Fixable/
+
+The part I like most about a modular monolith is runtime modes: the same codebase can run as an API server, background worker, or scheduled job processor just by toggling which modules initialize. Expose your REST endpoints on an instance in API mode, run it as a background queue consumer in worker mode—all from the same Git repo and deployment artifact.
+
+A modular monolith organizes code into well-bounded modules within a single deployable unit—the structural discipline of microservices without the distributed systems headache. Enforce module boundaries through namespace conventions or architectural tests (ArchUnit is your friend here), and use dependency injection to wire modules together while preventing circular dependencies.
+
+** DevEx
+The DevEx win is substantial: developers can run the entire application locally with a single docker-compose up or even directly, eliminating the "wait, which seven services do I need running to test this?" problem.
+
+Testing becomes dramatically simpler since you can spin up the whole system in-process for integration tests without mocking HTTP boundaries or dealing with flaky container orchestration.
+
+Using a batteries-included framework like Spring Boot, Django, or Rails for the monolith is a force multiplier here—you get auth, ORM, migrations, admin, and background job infrastructure for free, so you can focus on your domain logic instead of reinventing plumbing.
+
+** Configuration
+When configuring runtime modes, stick to positive feature toggles like =ENABLE_API_SERVER=true= and =ENABLE_BACKGROUND_WORKERS=true= rather than negative ones like =DISABLE_WORKERS=false=, because double negatives make your configuration files read like a boolean logic puzzle[fn:8].
+
+[fn:8] Negative flags also create awkward coupling: you end up in situations where you can't enable a feature you want without disabling something else first.
+
+* Satellite Services
+/No complexity cliff, 2 AM Fixable/
+
+Microservices sound great until you're debugging distributed transactions across twelve repos. Keep a main application backed by satellite services for concerns that truly benefit from separation.
+
+We handled ML and data analytics workloads in Python alongside the main app—attempts to migrate them into the monolith were painful, and adding features later even more so. We once had an RCE on a mixed workload running user templates; life would've been easier if untrusted code had been separated by a network boundary. I've rewritten small proxies that filter and shape traffic for slower monoliths when the gateway got too complex, and spun off latency-sensitive parts of Rails monoliths into Rust or Go.
+
+The common thread—separate when:
+- Taking advantage of an ecosystem that isn't present in your main language
+- Running highly sensitive operations
+- Running untrusted code
+- Compute-bound workloads that benefit from a faster runtime
+- Latency-sensitive operations that need a leaner service
+* API Gateway
+/No complexity cliff, 2 AM Fixable/
+
+We had enterprise customers complaining about whitelisting two endpoints. We had six, some unavoidable. A gateway centralizes authentication, rate limiting, request routing, and response transformation—bringing that endpoint count down significantly. Kong, AWS API Gateway, Traefik—pick one that matches your scale. But the real value is the escape hatch: when a service has a long-term issue or a short-lived bug, the gateway gives you room to work around it—rewrite a path, shed load, inject a header—without touching the service itself. That's the kind of lever you want at 2 AM[fn:9].
+
+[fn:9] I wrote more about sharing a single resource and splitting later in [[/post/share-and-split-resources][Share Resources, Allow Them to Split]].
+* The Pattern
+The problems feed each other: service sprawl creates toil, toil resists automation, hidden complexity masks bad tuning. The principles aren't independent—violate one and the others start to crack.
+
+Look at the tags above. "No complexity cliff" shows up everywhere—that's the through-line. I don't want simple things to be hard, and I don't want to pay for complexity I'm not using. "2 AM Fixable" is a close second: most of these choices make systems easier to reason about when you're half-asleep and on-call. Cost consciousness and no-toil round it out—keep the bill sane, automate the drudgery.
+
+The principles also pull against each other. Self-hosting is cheaper, but managed services are easier to fix at 2 AM—cost consciousness and operability trade off directly. Automation eliminates toil, but the automation itself becomes a system to maintain—sometimes the toil is cheaper than the complexity of eliminating it. And investing in automation has an upfront cost; for low-frequency tasks, the automation might never pay for itself.
+
+None of these technologies, processes, or perspectives are perfect[fn:11]. But they're good enough that I can stop relitigating the same architectural arguments and get back to work[fn:10].
+
+[fn:10] [[https://boringtechnology.club/][Choose Boring Technology]]
+
+[fn:11] This list is intentionally scoped to the things I have strong opinions on. Observability, infrastructure as code, feature flags—all important, none ready for my "I'll die on this hill" list yet.
