@@ -35,11 +35,11 @@ enableGitInfo = true
     noUgly        = true
 
 [outputs]
-  home     = ["HTML", "RSS", "Atom"]
+  home     = ["HTML"]
   section  = ["HTML", "RSS", "Atom"]
   page     = ["HTML"]
-  taxonomy = ["HTML", "RSS", "Atom"]
-  term     = ["HTML", "RSS", "Atom"]
+  taxonomy = ["HTML"]
+  term     = ["HTML"]
 
 [[menu.main]]
   name   = "Home"
@@ -47,7 +47,7 @@ enableGitInfo = true
   weight = 1
 [[menu.main]]
   name   = "Posts"
-  url    = "/post/"
+  url    = "/posts/"
   weight = 2
 [[menu.main]]
   name   = "About"
