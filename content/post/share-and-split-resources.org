@@ -1,0 +1,189 @@
+#+TITLE: Share Resources, Allow Them to Split
+#+AUTHOR:
+#+DATE: 2026-05-05
+#+OPTIONS: toc:2 num:nil
+#+STARTUP: showall
+
+There's a quiet design principle that pays for itself many times over in microservice architectures:
+
+#+BEGIN_QUOTE
+*Share infrastructure resources where you can. Write services as if you weren't.*
+#+END_QUOTE
+
+The two halves of the principle pull in different directions on purpose:
+
+- *Sharing* is what you do at deployment time, to keep operational cost and complexity down.
+- *Splitting-readiness* is what you do at design time, to keep your future options open.
+
+A service that's been written correctly doesn't know or care whether its bucket, its database, or its domain is shared with five other services or entirely its own. That ignorance is the feature. This is a specific instance of the rule behind Bezos' famous API mandate: all service communication goes through published interfaces; everything else—shared memory, direct linking, back doors—is forbidden. Two services sharing a bucket is an operational convenience; one service /knowing/ it shares a bucket is a coupling that bypasses the service contract.
+
+* The setup: two services, one bucket
+
+Suppose you have two microservices—say, an =invoicing= service and a =reporting= service—and both need to write files to S3. The naïve options are:
+1. Give each service its own bucket.
+2. Put both in one bucket and let them write wherever.
+
+The first is wasteful. Buckets aren't free in operational terms—each one is a thing to provision, secure, monitor, lifecycle, back up, audit, and pay for. If you have forty microservices, you do not want forty buckets when ten will do.
+
+The second is a different kind of mess: collisions, accidental overwrites, no clean way to apply per-service IAM policies, lifecycle rules, or replication.
+
+The right answer is to share the bucket but *prefix the keys*:
+
+#+BEGIN_EXAMPLE
+s3://company-data/invoicing/2026/05/invoice-1234.pdf
+s3://company-data/reporting/quarterly/q1-2026.pdf
+#+END_EXAMPLE
+
+Now both services share a single piece of infrastructure, but their data is cleanly partitioned. IAM policies can scope =invoicing/*= to the invoicing service and =reporting/*= to the reporting service. Lifecycle rules can target one prefix and not the other. Replication, encryption, observability, cost attribution—all of it can be applied per-prefix. The bucket is shared; the /concerns/ are split.
+
+The same idea applies to API gateways and load balancers:
+
+#+BEGIN_EXAMPLE
+https://api.company.com/invoicing/...
+https://api.company.com/reporting/...
+#+END_EXAMPLE
+
+One domain, one TLS certificate, one DNS record, one load balancer—but two cleanly separated services. This is the /share/ half of the principle.
+
+* The other half: don't assume the sharing
+
+Here's where most teams quietly create future pain. The invoicing service is configured to write to =s3://company-data/invoicing/...=. The reporting service is configured to write to =s3://company-data/reporting/...=. So far, so good.
+
+The mistake is letting the /code/ know that both services use the same bucket.
+
+You see this when:
+
+- A shared utility library hardcodes the bucket name and only takes a prefix as input.
+- One service reads files written by another directly out of the same bucket, assuming co-location.
+- A deployment script provisions one set of bucket-level credentials and hands them to several services.
+- An engineer writes a cross-service feature that does =ListObjects= across both prefixes in one call.
+- Documentation and runbooks refer to "the data bucket" rather than "the invoicing service's bucket."
+
+Each of these silently couples the two services to the same bucket forever. The day you want to move =reporting= to its own bucket—perhaps because it's grown large enough to justify dedicated lifecycle policies, or it now lives in a different AWS account, or compliance demands isolation, or it needs to be replicated to a different region—you can't. Not without a refactor.
+
+The fix is straightforward but disciplined: *each service treats its bucket and prefix as opaque configuration*. The invoicing service doesn't know there's a reporting service. It doesn't know whether its bucket is shared or dedicated. It just knows: "here is my bucket, here is my prefix, write here."
+
+#+BEGIN_SRC yaml
+# invoicing service config
+storage:
+  bucket: company-data
+  prefix: invoicing/
+
+# reporting service config
+storage:
+  bucket: company-data
+  prefix: reporting/
+#+END_SRC
+
+Today, both =bucket= values happen to be the same. Tomorrow you change one, redeploy that one service, and nothing else needs to know.
+
+* The pattern, stated more carefully
+
+Stripped of S3 specifics, the principle has three parts:
+
+1. *The substrate is the shared resource.* A bucket, a domain, a database server, a Kafka cluster, a Redis instance, a Kubernetes cluster, a metrics backend.
+2. *The namespace is the per-service partition within the substrate.* A key prefix, a path prefix, a schema, a topic prefix, a logical database number, a Kubernetes namespace, a metric prefix.
+3. *The service code knows only its own fully-qualified location* —substrate plus namespace, treated as one opaque configured value. It doesn't know the substrate is shared, and it doesn't know the names of any other services' namespaces.
+
+Get those three right and sharing becomes a deployment-time optimisation rather than an architectural commitment.
+
+* More examples of the pattern
+
+The same shape repeats almost everywhere infrastructure can be shared. A handful worth seeing explicitly:
+
+** Databases
+
+A shared PostgreSQL server with one schema per service. The invoicing service connects with credentials that grant access only to the =invoicing= schema. Whether it writes =INSERT INTO invoices ...= or =INSERT INTO invoicing.invoices ...= doesn't matter—both are fine. What matters is that it never writes =JOIN reporting.something=. The schema-qualified name is its own address; the problem starts when someone uses it to reach across into a sibling's schema. When invoicing outgrows the shared server, you provision a dedicated database, change the connection string, and the SQL is unchanged.
+
+** Kafka and message brokers
+
+A shared cluster with per-service topic prefixes: =invoicing.invoices.created=, =reporting.reports.generated=. The service is told its prefix; it doesn't know the cluster has any other tenants. Cross-service communication happens through /published/ events on well-known topics, not by sneaking into another service's prefix.
+
+** Redis and caches
+
+One Redis instance, with each service using a key prefix or a logical database number. The service uses keys like =user:123:session= internally; the prefix =invoicing:= is added by the client library based on configuration. If you later move invoicing to its own Redis cluster, the keys don't change.
+
+** Kubernetes clusters
+
+A shared cluster with one namespace per service or per team. RBAC, network policies, resource quotas, and pod security all attach to the namespace. Services have no notion of the cluster's broader topology—they're configured with their own service URLs and don't reach across namespaces by hardcoded names.
+
+** Observability backends
+
+A shared Prometheus, Grafana, or Datadog instance with per-service metric prefixes, log indices, and trace service names. Dashboards and alerts are scoped per service. When one service's volume justifies a dedicated backend, it moves; nothing else changes.
+
+The same shape appears in CDN routing (path-based origins), secrets management (per-service vault paths), and CI/CD pipelines (per-service artefact paths and credentials). In every case the recipe is the same: a shared substrate, a per-service namespace, and code that knows only its own fully-qualified location.
+
+* The same principle, one level in
+
+The pattern isn't limited to infrastructure shared /between/ services. It applies just as well /within/ a single service, between tenants.
+
+Share the database. Partition every row by =tenant_id=. Write queries as if each tenant's data lived in its own database—because one day, for your largest customer, it will. Many SaaS companies eventually do exactly this: the big customer gets a dedicated database, a dedicated cluster, sometimes a dedicated region.
+
+The rule is the same: share the substrate, namespace the contents, keep the code oblivious to the sharing.
+
+* One config value or two?
+
+A common question: should the service receive the substrate and namespace as two configuration values, or as one composed string?
+
+Two values is fine:
+
+#+BEGIN_SRC yaml
+storage:
+  bucket: company-data
+  prefix: invoicing/
+#+END_SRC
+
+One composed value is better:
+
+#+BEGIN_SRC yaml
+storage:
+  location: s3://company-data/invoicing/
+#+END_SRC
+
+The real rule has nothing to do with one value versus two. The real rule is: *don't magick*. Don't strip the prefix to "discover" the underlying bucket. Don't construct paths into another service's namespace. Don't write utility code that takes a prefix and assumes everything lives in the same bucket. Don't log the components separately in ways that invite someone to reassemble them. Two config values are perfectly fine as long as the service treats them as /its own coordinates/ and never uses them to reason about the broader infrastructure.
+
+* What you actually buy
+
+This costs nothing on day one and saves enormous effort by year three. Concretely:
+
+- *Operational flexibility.* When one service's storage, traffic, or data shape diverges from the others, you split it out by changing config and redeploying that one service. No coordinated migrations, no synchronised cutover.
+- *Blast radius control.* Sharing infrastructure means a misconfiguration or noisy neighbour can affect every tenant. If splitting is cheap, you split the moment you have a real reason—a security incident, a compliance requirement, a performance anomaly. If splitting is expensive because code assumes co-location, you live with the risk far longer than you should.
+- *Honest service boundaries.* When code knows it's sharing a bucket with another service, the temptation to reach across—"just read it directly, it's right there"—is enormous, and engineers will succumb under deadline pressure. Treating the location as opaque kills the temptation at the source. Cross-service data access goes through APIs and events, as it should.
+- *Cleaner local development and testing.* A service that doesn't assume any particular shared infrastructure can be pointed at a local stack, a per-developer sandbox, or a CI ephemeral environment with no code changes. The same binary runs everywhere from laptop to production.
+- *Clearer cost attribution.* Per-namespace tagging, per-prefix metrics, and per-schema billing become straightforward when each service genuinely uses only its own slice. You can answer "how much does invoicing cost?" without untangling shared data.
+- *Easier acquisitions, spinoffs, and migrations.* When a service has no hidden dependencies on its substrate, moving it—to a different cloud, a different account, a different company—is mostly a configuration exercise. Hidden assumptions are what make these migrations gruelling.
+- *Simpler on-prem and customer-managed deployments.* When you ship software to a customer's environment, every resource you need is a line item in a provisioning request. Asking for one Postgres instance and one S3-compatible bucket is a conversation; asking for ten of each is a multi-week back and forth. Sharing keeps the resource footprint small enough that on-prem deployments stay practical.
+- *Faster dev and test environments.* The same logic applies to developer laptops and CI. One database and one bucket spin up in seconds. Ten of each is a docker-compose file that takes a minute to start and breaks in new ways every month.
+- *Cell-based architectures.* When services are indifferent to whether their infrastructure is shared or dedicated, you can mix and match cell topologies freely. A small cell runs everything on shared infra. A large cell gives hot services dedicated resources. A customer cell gets full isolation. The same service binaries deploy to all three—only the configuration differs.
+
+* When sharing is the wrong default
+
+Not everything should be shared. Some resources should be separate from day one:
+
+- *Data at different sensitivity tiers.* PII, payment data, and authentication secrets deserve dedicated infrastructure not because sharing is technically impossible but because the blast radius of a misconfiguration is unacceptable. A leaked IAM policy on a shared bucket can expose data from every service in the prefix tree. This goes double when regulation explicitly mandates isolation—HIPAA, PCI-DSS, FedRAMP—where sharing creates legal exposure on top of technical risk.
+- *Wildly different access patterns.* A service that does millions of small reads per second and a service that does nightly multi-terabyte batch writes should not share a database or a storage backend.
+
+The principle still holds in these cases—write the service as if the resource /could/ be shared, even when you know it won't be. The discipline of opaque configuration costs nothing. You're just choosing to start on the "split" side of the spectrum rather than the "shared" side.
+
+* A checklist when introducing a new shared resource
+
+When you introduce a new shared resource, work through these:
+
+- [ ] Does each service have its own prefix, schema, topic, or namespace within the shared resource, with no overlap?
+- [ ] Is the /full/ path (substrate plus namespace) externalised as opaque configuration, not fiddled with inside the service?
+- [ ] If you changed one service's config tomorrow to point at a separate resource, would anything break? If yes, what assumption is hiding?
+- [ ] Are cross-service interactions going through APIs and events, never through direct reads of another service's namespace?
+- [ ] Do per-namespace IAM, network, lifecycle, and observability policies actually exist, so that the /capability/ to split is real and not just theoretical?
+- [ ] Do your runbooks and documentation refer to resources by service ("invoicing's bucket") rather than by shared name ("the data bucket")? Language shapes thinking.
+
+If you can answer those cleanly, you have the best of both worlds: the efficiency of shared infrastructure and the freedom to split it the moment splitting is worthwhile.
+
+* The principle, finally
+
+#+BEGIN_QUOTE
+Share the substrate. Namespace the contents. Keep the service oblivious to the sharing.
+#+END_QUOTE
+
+Sharing is a deployment-time choice you make to save cost and complexity. Splitting is a future deployment-time choice you preserve by writing the service correctly today. The two are not in tension—they're the same decision viewed from different time horizons.
+
+The services that age well are the ones whose code is indifferent to whether they're sharing or alone. They were always going to be one of the two; you just don't have to decide now, and you don't have to decide forever.
