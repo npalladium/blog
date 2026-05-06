@@ -1,4 +1,5 @@
 #+title: Autocorrect helps unravel what little is left of my sanity
+#+date: 2026-02-28
 #+author: npalladium
 
 I’m the world’s most frustrated man, \\

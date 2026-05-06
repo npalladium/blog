@@ -5,9 +5,9 @@ theme = "hugo-xmin"
 enableGitInfo = true
 
 [frontmatter]
-  # Dates: git commit date > file mtime > frontmatter field
-  date     = [":git", ":fileModTime", "date"]
-  lastmod  = [":git", ":fileModTime", "lastmod", "date"]
+  # Dates: frontmatter field > git commit date > file mtime
+  date     = ["date", ":git", ":fileModTime"]
+  lastmod  = ["lastmod", ":git", ":fileModTime"]
 
 [params]
   author     = "npalladium"

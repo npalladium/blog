@@ -1,4 +1,5 @@
 #+title: Things I've Come to Believe In: A Technical Stack Confession
+#+date: 2026-05-05
 
 These aren't religious convictions—I won't argue about them at parties (maybe at KubeCon)—but they've proven themselves reliable enough that I reach for them by default.
 

@@ -1,4 +1,5 @@
 #+title: Keeping Things In Sync (Or Why We Can't Have Good Things)
+#+date: 2026-05-05
 
 When you have two related pieces of code that need to stay consistent—say, a data structure and its serialization logic, or an API and its documentation—you face a fundamental problem: how do you keep them from drifting apart?
 

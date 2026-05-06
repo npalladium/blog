@@ -1,4 +1,5 @@
 #+title: Scripting For Profit
+#+date: 2026-02-28
 #+author: npalladium
 #+tags[]: bash shell programming
 
