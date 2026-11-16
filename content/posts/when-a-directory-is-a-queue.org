@@ -1,0 +1,159 @@
+#+TITLE: When a Directory Is a Queue
+#+AUTHOR: npalladium
+#+DATE: 2026-09-30
+#+OPTIONS: toc:nil num:nil
+#+STARTUP: showall
+
+Consider a native desktop application that produces reports, recordings, or diagnostic bundles. Those artifacts live on the user's machine first; creating one does not necessarily trigger an upload.
+
+The delay may be deliberate. On a metered connection, uploading immediately may cost more than waiting. An offline-first application also needs to let the user keep working without a reachable server. Cloud delivery is a separate operation that may happen later, after the app has closed and restarted.
+
+When delivery becomes appropriate, a background uploader finds the pending files, uploads them, and deletes the local copies when delivery succeeds. Someone proposes tracking the uploads in a database. Someone else asks why the presence of the file isn't enough.
+
+Both designs can work. Both can lose data if their recovery rules are wrong. I'd choose between them by looking at the delivery state the application needs to track.
+
+* A directory already implements a queue
+
+Suppose this application produces a diagnostic report with the identity =report-0042=. The producer writes =report-0042.partial= while generating it, then publishes =report-0042.ready= when it is complete. A background worker scans for ready files, uploads them when eligible, and removes the local copies after delivery succeeds. Failed uploads leave the files in place. On restart, the worker scans again.
+
+The files already give the worker a way to recover pending uploads after a restart:
+
+- A file in the pending directory represents work to do.
+- Removing it acknowledges completion.
+- Scanning reconstructs pending work after a restart.
+
+It looks like a hack. It probably is one. But for a small uploader, it may be a better fit than introducing a separate delivery ledger.[fn:1] The file itself is the pending upload; there is no separate queue row pointing to it. For a single-process worker with a modest backlog, repeatable uploads, and no requirement to preserve attempt history, that is a useful reduction in moving parts.
+
+The filename distinguishes an incomplete report from a completed one. It doesn't record when to retry a failed upload, whether delivery has been permanently rejected, or whether the upload succeeded but local deletion failed.
+
+Those distinctions don't disappear because the design leaves them unnamed.
+
+* Separate the facts before choosing the store
+
+There are at least three independent questions:
+
+| Question | Example |
+|----------+---------|
+| What bytes exist locally? | The finalized file =report-0042.ready= is available on disk. |
+| Is delivery allowed? | The report's associated record has been accepted; consent or retention policy permits delivery. |
+| What happened during delivery? | The remote service acknowledged =report-0042=; local cleanup remains. |
+
+The database can record whether a report is allowed to upload, while the filesystem holds the report itself. Using both is not a conflict by itself. The problem arises when they record the same fact differently and the app has no rule for deciding which to trust.
+
+A row for =report-0042= with its =state= set to =ready= can express the application's intention to deliver the report. It cannot guarantee that the file still exists. A user, another process, or a storage failure can invalidate that assumption after the transaction commits.
+
+The distinction matters in the other direction too. A file on disk proves neither authorization to upload nor the existence of the business record it belongs to. Finding an untracked file during a recovery scan is not enough reason to upload it. The app still needs to check whether delivery is allowed.
+
+* “Uploaded” is not “deleted”
+
+With file presence as the only delivery state, the worker can repeat an upload indefinitely:
+
+1. The remote service accepts =report-0042=.
+2. The client tries to delete =report-0042.ready=.
+3. Deletion fails.
+4. The next scan finds the ready file and uploads the report again.
+
+The network operation succeeded. The cleanup operation failed. Treating file presence as the only state collapses those outcomes into “upload pending.”
+
+A small acknowledgement marker can preserve the distinction without introducing a database. After validating the remote acknowledgement, the worker persists =report-0042.ack= next to the report. Only after the marker is durable does it attempt to delete the payload. Subsequent scans that find the marker retry deletion, not transmission. The marker must identify this immutable report: reusing the same identity for different bytes could let an old acknowledgement suppress a new upload.
+
+For this report, the protocol has five local representations:
+
+- =report-0042.partial=: production is incomplete. The uploader skips the incomplete file. The producer may still be writing it; if production was interrupted, recovery code must decide what to do with it.
+- =report-0042.ready=: the report is finalized and pending delivery. The worker uploads it if eligible.
+- =report-0042.ready= plus =report-0042.ack=: delivery is acknowledged and cleanup remains. The worker retries local cleanup.
+- =report-0042.ack= without the payload: delivery is acknowledged, but the local report is absent. The worker removes the leftover marker.
+- Neither payload nor marker: there is no local work to reconstruct from this directory.
+
+On a filesystem that provides an atomic rename within the same filesystem, the producer can finish and close =report-0042.partial=, then rename it to =report-0042.ready=. The worker sees either the incomplete name or the published name, not an intermediate rename state. This is a better completion signal than “the modification time is more than a few seconds old.” An idle writer is not necessarily a finished writer.
+
+Atomic visibility does not guarantee durability across power loss. If surviving power loss is a requirement, the app must also flush file contents and directory changes in the order required by its platform. The same durability requirement applies to the acknowledgement marker.
+
+These filenames and markers form a small filesystem protocol. Different processes and application versions need to interpret them consistently, including files left behind before an upgrade. Changing those conventions requires compatibility and recovery rules, just as changing a database schema does.
+
+* The uncertainty window doesn't go away
+
+Once durable, the marker separates a completed upload from unfinished local cleanup. It does not make the remote write and the local acknowledgement atomic.
+
+Suppose the remote service accepts =report-0042= and the process crashes before =report-0042.ack= is durable. On restart, the worker finds =report-0042.ready= without a marker. The local evidence is indistinguishable from a report that was never delivered.
+
+A database row has the same problem. If the process crashes before committing the report's acknowledgement, the row still says pending. An ordinary local transaction does not include the remote object-store write. Moving the acknowledgement into SQL doesn't remove the gap.
+
+The delivery protocol needs safe retries or a way to determine whether the remote service accepted the report. A stable remote key can make repeated writes of the same immutable report safe, provided overwriting preserves the intended meaning. The server could instead recognize an idempotency key, or retain an upload receipt that the client can look up after a restart. Reusing a key is not sufficient when the bytes can change or each upload triggers additional side effects.
+
+Even safe repetition has a cost. Repeated writes can consume bandwidth, requests, retained object versions, and downstream processing. “The final object is the same” is a correctness property, not a cost model.
+
+Neither storage choice, on its own, guarantees exactly-once delivery.
+
+* Delivery state worth querying
+
+A database becomes useful when the app needs to track and query retry times, errors, and which worker is handling each upload.
+
+Suppose the report's next attempt is due in twenty minutes, and that deadline must survive a restart. An operator also needs to see its last error and distinguish a temporary outage from permanent rejection. Adding priorities or several workers introduces more facts to track.
+
+Now the query is no longer “which files remain?” It is “which eligible reports are due, not terminally failed, and not owned by another worker?” An indexed query and a transaction may be substantially simpler than a directory scan plus several kinds of sidecar file.
+
+The report's delivery ledger might contain:
+
+#+BEGIN_EXAMPLE
+artifact_id
+payload_path
+state
+attempt_count
+next_attempt_at
+remote_object_key
+acknowledged_at
+last_error
+#+END_EXAMPLE
+
+That isn't a mandatory schema. I would add a lease when workers need coordinated ownership, and attempt history when there is a reason to retain it. The ledger need not become a generic workflow engine.
+
+If the ledger also records an =uploading= state, it needs a recovery rule for attempts left in that state. With multiple workers, the record alone cannot establish whether the original worker has stopped or another worker may take over.
+
+A lease can help coordinate those claims, but an expired lease doesn't magically stop a slow old worker. The remote protocol still needs to tolerate duplicate or stale attempts.
+
+Transactions, indexes, constraints, and queries can now express the required behavior more directly than a growing filesystem convention does. If the application already has a well-supported local database, the incremental cost may be small. At that point, avoiding one table could mean building its replacement out of sidecar files.
+
+* The row/file boundary
+
+Suppose the database stores the upload status and the path to the report, while the report itself remains a separate file. Updating the row and creating or deleting the file are separate operations. A crash between them can leave a file without a row, or a row without a file:
+
+| Observed state | Required decision |
+|----------------+-------------------|
+| =report-0042.ready= exists, row absent | Is this an orphan or recoverable work? |
+| Row exists, report file absent | Can the report be regenerated, or is this a terminal missing-artifact error? |
+| Row says acknowledged, report file exists | Retry cleanup, not upload. |
+| Row says pending, remote accepted the report | Resolve through the idempotency or receipt protocol. |
+
+The answers depend on the domain. Automatically importing every orphan may violate eligibility rules. Automatically deleting every unreferenced file may destroy recoverable work. A generic “reconcile” function isn't a design until those choices are explicit.
+
+If the report contents and upload status are stored in the same database transaction, they can be committed together. The remote upload still happens outside that transaction. Storing the contents in the database changes other tradeoffs: database size, write amplification, backup behavior, streaming, and storage reclamation. For large media artifacts, keeping the bytes as files can still be the better choice.
+
+* Processing the backlog
+
+Once the app knows which reports still need delivery, it has another decision to make: how many to upload at once. After a long offline period, it may have thousands of pending reports but capacity for only a few concurrent transfers. Choosing a directory or a database does not set that limit.
+
+A single upload process can keep its list of current transfers in memory and limit itself to four concurrent requests. Its saved records can continue to say “pending” until it records a successful upload. After a crash, it reconstructs pending work and retries safely. The scheduler can enforce that limit over either a directory or a database; storing every pending report in a database does not impose a request limit by itself.
+
+Other bounds remain independent too:
+
+- Four uploads can still use too much memory if each request reads a large artifact entirely into RAM.
+- An offline producer can fill the disk even when the uploader has impeccable retry logic.
+- A worker can load an enormous queue into memory instead of paging or scanning incrementally.
+- A presigned URL can expire while its artifact waits behind other work.
+
+I treat byte limits, backlog, retention, and scheduling as separate decisions from request count. If the presigned URL for =report-0042= expires, the app can obtain a new one and retry using the same report ID.
+
+* Choose the smallest complete model
+
+I would start with a directory-backed queue when the workload is single-owner, the backlog is manageable, artifacts are immutable once finalized, and restart recovery can safely retry them. I'd make completion and acknowledgement explicit rather than inferring both from one file's presence.
+
+I would choose a database ledger when the app needs retry schedules that survive restarts, queries over pending uploads, an audit trail, or a safe way for several workers to claim jobs. At that point, refusing the database may be the more elaborate design.
+
+For either choice, I would trace =report-0042= through the failure boundaries: production, remote acceptance, durable acknowledgement, and local cleanup. If the process stops between two of those steps, what evidence survives? If the file disappears, is the report lost or recoverable? The answers determine whether recovery retries delivery, retries cleanup, or asks for intervention.
+
+The table count matters less to me than whether I can explain who owns each fact and what recovery does with it.
+
+For this uploader, I'd use file presence for facts the filesystem can establish and persist the facts it cannot. I'd choose the representation that makes those recovery decisions explicit.
+
+[fn:1] I usually dislike encoding application state in filenames or file presence (in-band signalling). But seeing someone else's design persuaded me that this can be a reasonable trade-off for a small uploader.
