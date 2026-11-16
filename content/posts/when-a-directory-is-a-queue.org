@@ -2,7 +2,7 @@
 #+AUTHOR: npalladium
 #+DATE: 2026-09-30
 #+PUBLISHDATE: 2026-11-16T20:13:48+05:30
-#+LASTMOD: 2026-11-16T20:12:52+05:30
+#+LASTMOD: 2026-11-16T15:49:04Z
 #+TAGS[]: software-design reliability
 #+OPTIONS: toc:nil num:nil
 #+STARTUP: showall
@@ -25,9 +25,9 @@ The files already give the worker a way to recover pending uploads after a resta
 - Removing it acknowledges completion.
 - Scanning reconstructs pending work after a restart.
 
-It looks like a hack. It probably is one. But for a small uploader, it may be a better fit than introducing a separate delivery ledger.[fn:1] The file itself is the pending upload; there is no separate queue row pointing to it. For a single-process worker with a modest backlog, repeatable uploads, and no requirement to preserve attempt history, that is a useful reduction in moving parts.
+It looks like a hack. It probably is one.[fn:1] But for a small uploader, it may be a better fit than introducing a separate delivery ledger.[fn:2] The file itself is the pending upload; there is no separate queue row pointing to it. For a single-process worker with a modest backlog, repeatable uploads, and no requirement to preserve attempt history, that is a useful reduction in moving parts.
 
-The filename distinguishes an incomplete report from a completed one. It doesn't record when to retry a failed upload, whether delivery has been permanently rejected, or whether the upload succeeded but local deletion failed.
+The filename distinguishes an incomplete report from a completed one. It doesn't record when to retry a failed upload, whether delivery has been permanently rejected, or whether the upload succeeded but local deletion failed.[fn:3]
 
 Those distinctions don't disappear because the design leaves them unnamed.
 
@@ -53,7 +53,7 @@ With file presence as the only delivery state, the worker can repeat an upload i
 
 1. The remote service accepts =report-0042=.
 2. The client tries to delete =report-0042.ready=.
-3. Deletion fails.
+3. Deletion fails.[fn:4]
 4. The next scan finds the ready file and uploads the report again.
 
 The network operation succeeded. The cleanup operation failed. Treating file presence as the only state collapses those outcomes into “upload pending.”
@@ -159,4 +159,10 @@ The table count matters less to me than whether I can explain who owns each fact
 
 For this uploader, I'd use file presence for facts the filesystem can establish and persist the facts it cannot. I'd choose the representation that makes those recovery decisions explicit.
 
-[fn:1] I usually dislike encoding application state in filenames or file presence (in-band signalling). But seeing someone else's design persuaded me that this can be a reasonable trade-off for a small uploader.
+[fn:1] [[https://cr.yp.to/proto/maildir.html][Maildir]] is an established example of this pattern: =tmp/=, =new/=, and =cur/= separate incomplete messages, newly delivered mail, and reader-managed state.
+
+[fn:2] I usually dislike encoding application state in filenames or file presence (in-band signalling). But seeing someone else's design persuaded me that this can be a reasonable trade-off for a small uploader.
+
+[fn:3] Directories such as =rejected/= and =acknowledged/= can encode more states through renames. Retry times and errors can also be stored in files; a ledger makes querying and coordinating them easier.
+
+[fn:4] On Windows, a scanner or sync client can [[https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-deletefilew][hold a handle that blocks deletion]]. Rename guarantees vary too: [[https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw][cross-volume moves]] may use copy-and-delete.

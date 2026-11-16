@@ -2,7 +2,7 @@
 #+AUTHOR: npalladium
 #+DATE: 2026-11-13
 #+PUBLISHDATE: 2026-11-16T19:08:54+05:30
-#+LASTMOD: 2026-11-16T20:10:32+05:30
+#+LASTMOD: 2026-11-16T15:49:04Z
 #+TAGS[]: software-design data-modeling reliability
 #+OPTIONS: toc:2 num:nil
 #+STARTUP: showall
@@ -71,6 +71,25 @@ Those questions concern what a contract guarantees. Exceptional business operati
 
 An exceptional operation should have deliberately designed authority, preconditions, postconditions, and observability. Repair operations may need different guarantees from normal operations. Escape hatches can be necessary without becoming unrestricted backdoors.
 
+For example, a normal shipping operation might require recorded payment. An offline-payment path can expose a separate, deliberately authorized operation:
+
+#+BEGIN_SRC typescript
+type Pending = { status: "pending" };
+type Paid = { status: "paid"; paidAt: Date };
+type Shipped = { status: "shipped"; paidAt: Date; trackingNo: string };
+
+declare function ship(order: Paid, trackingNo: string): Shipped;
+
+declare function shipWithOfflinePayment(
+  order: Pending,
+  proof: OfflinePayment,
+  by: Admin,
+  trackingNo: string,
+): [Shipped, AuditEvent];
+#+END_SRC
+
+The offline path verifies the payment evidence, records the actual payment time, establishes =Paid=, and can reuse =ship=. It still needs authorization checks and consistent persistence of the payment, shipment, and audit record; the signature alone does not supply them. This preserves the payment invariant while accommodating an unusual workflow.
+
 Database constraints can be expensive to evolve at scale, but a semantic relationship is distinct from the mechanism enforcing it. Some relationships require referential integrity; others represent historical associations that must survive deletion. SQL schemas are both persistence contracts and possible authoritative enforcement boundaries. Sometimes relaxing database-level enforcement makes sense, but it shifts responsibility elsewhere. The enforcement mechanism depends on the domain's meaning, the deployment architecture, and the consequences of violating the invariant.
 
 External wire schemas often serve software that changes independently, while internal types are generally easier to change together. Required Protobuf fields illustrate how rigid wire contracts make deployment coordination dangerous, but parsers can convert flexible wire representations into strictly validated internal types. Compatibility and validity are distinct properties.
@@ -96,6 +115,30 @@ I now think about robustness differently. I distinguish between unknown but perm
 That means processing what the contract permits and preserving unknown data when the contract permits it, without treating it as validated domain state.[fn:8] Malformed semantics call for rejection with useful diagnostics, and quarantine or repair where necessary. Unavoidable deviations need explicit compatibility exceptions; rejection need not mean crashing or an inability to recover.
 
 Robustness means handling deviations without losing control of the system's semantics. I no longer accept liberal parsing as a generally desirable default. When deciding how strict to be, I now consider interoperability, incentives, and ecosystem evolution. I want compatibility workarounds to be deliberate, documented, observable, and limited where practical. The original formulation appears in [[https://datatracker.ietf.org/doc/html/rfc761#section-2.10][RFC 761, section 2.10]], and [[https://datatracker.ietf.org/doc/html/rfc9413][RFC 9413]] offers a recent critique.
+
+Suppose a wire contract expresses USD amounts as integer cents, but one provider version sends decimal dollar strings:
+
+#+BEGIN_SRC typescript
+function parseAmount(raw: unknown, src: Source): Amount | Rejected {
+  if (typeof raw === "number" && Number.isSafeInteger(raw)) {
+    return minorUnits(raw);
+  }
+
+  // Known deviation: provider-x v2 sends "12.50". Reported upstream.
+  if (
+    src.is("provider-x", "v2") &&
+    typeof raw === "string" &&
+    isDecimalString(raw)
+  ) {
+    metrics.count("quirk.provider-x.decimal-amount");
+    return fromDecimalString(raw);
+  }
+
+  return reject("amount", raw);
+}
+#+END_SRC
+
+Here, =Source= comes from the integration context, not a version claim in the payload. =fromDecimalString= converts exactly to cents and rejects amounts outside the domain's limits; =minorUnits= enforces the same limits. The exception accommodates a known wire defect without widening the accepted format for every producer.
 
 * Three Uneasy Pieces, No Universal Formula
 
