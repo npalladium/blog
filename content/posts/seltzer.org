@@ -1,0 +1,35 @@
+#+TITLE: SELTZER: A Monthly Infrastructure Review
+#+AUTHOR: npalladium
+#+DATE: 2026-11-16
+#+PUBLISHDATE: 2026-11-16T17:43:26Z
+#+LASTMOD: 2026-11-16T17:43:26Z
+#+TAGS[]: infrastructure observability reliability
+#+OPTIONS: toc:nil num:nil
+#+STARTUP: showall
+
+At a previous workplace, I scheduled a monthly infrastructure review[fn:1] with the product manager, the engineering manager, and occasionally other executives. We looked for ways to cut costs and improve the infrastructure.
+
+We started with [[https://www.brendangregg.com/usemethod.html][USE]], [[https://web.archive.org/web/20230111192952/https://www.weave.works/blog/the-red-method-key-metrics-for-microservices-architecture/][RED]], and the [[https://sre.google/sre-book/monitoring-distributed-systems/#xref_monitoring_golden-signals][golden signals from Google's SRE book]], alongside costs. Other questions gradually joined the agenda. One day we joked that we could call the whole thing SELTZER, but never managed to fill in all the letters.
+
+Here's my attempt to finish it. For a “backronym”, it fits those discussions suspiciously well.
+
+- *Saturation*: how full are we? Which resources are running out of headroom?
+- *Errors*: how often do requests fail?
+- *Latency*: how long does it take?
+- *Traffic*: how much is coming in?[fn:2]
+- *Zoom In*: what's hiding behind the averages?[fn:3] Look at tails, individual services or tenants, and short bursts.[fn:4]
+  - *Zzz*: will this let us sleep at night? Will it wake someone unnecessarily—or fail to wake them when it should? Are we comfortable running this architecture and handling its failures?[fn:5]
+- *Economics*: what is this costing us, including people's time? How efficiently are we using our resources? Where useful,[fn:6] calculate costs per request, use case, or customer. Sometimes infrastructure as code needs infrastructure as a Google Sheet.
+- *Risks*: what could go wrong, how likely and harmful would it be, and how would we recover from various DR/incident scenarios?
+
+[fn:1] One reason for the regular reviews was the amount of experimental work and the frequent changes to which services were in production. I suspect the review is also useful when the infrastructure is fairly stable. The services may stay the same while demand, costs, and operational risks change.
+
+[fn:2] For a while, we considered T for [[https://sre.google/sre-book/eliminating-toil/][toil]], which was also important in these reviews. Here, its time cost falls under Economics, and its operational consequences under Risks and Zzz.
+
+[fn:3] [[https://www.callcentrehelper.com/beware-of-watermelon-metrics-205604.htm][Watermelon metrics]] are green on the outside, red inside: headline indicators meet their targets while users struggle. Aggregation can hide slow requests or a struggling customer; the chosen metric may also miss what users actually need.
+
+[fn:4] A mean does not describe a workload's variability or tails, which can matter to queueing behavior. See Mor Harchol-Balter's [[https://www.cs.cmu.edu/~harchol/PerformanceModeling/book.html][Performance Modeling and Design of Computer Systems: Queueing Theory in Action]].
+
+[fn:5] The sleep question also covers noisy alerts and fragile deployments, even when the graphs look fine.
+
+[fn:6] On deciding what is worth measuring: Douglas W. Hubbard, [[https://www.howtomeasureanything.com/][How to Measure Anything]].
