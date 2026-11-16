@@ -1,6 +1,9 @@
 #+TITLE: Operating "Systems": Three Uneasy Pieces
 #+AUTHOR: npalladium
 #+DATE: 2026-11-13
+#+PUBLISHDATE: 2026-11-16T19:08:54+05:30
+#+LASTMOD: 2026-11-16T20:10:32+05:30
+#+TAGS[]: software-design data-modeling reliability
 #+OPTIONS: toc:2 num:nil
 #+STARTUP: showall
 

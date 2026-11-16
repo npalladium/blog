@@ -5,13 +5,13 @@
 {{- $authors := slice -}}
 {{- with .Params.authors }}{{ $authors = . }}{{ else }}{{ with .Params.author }}{{ $authors = slice . }}{{ else }}{{ with .Site.Params.author }}{{ $authors = slice . }}{{ end }}{{ end }}{{ end -}}
 {{ with $authors }}<p class="authors">{{ delimit . ", " }}</p>{{ end }}
-{{ if not .Date.IsZero -}}
-  {{- $created := .Date.Format .Site.Params.dateFormat -}}
+{{ if not .PublishDate.IsZero -}}
+  {{- $published := .PublishDate.Format .Site.Params.dateFormat -}}
   {{- $updated := .Lastmod.Format .Site.Params.dateFormat -}}
-  {{- if eq $created $updated -}}
-    <p class="dates">{{ $created }}</p>
+  {{- if eq $published $updated -}}
+    <p class="dates">{{ $published }}</p>
   {{- else -}}
-    <p class="dates">{{ $created }} · updated {{ $updated }}</p>
+    <p class="dates">{{ $published }} · updated {{ $updated }}</p>
   {{- end }}
 {{- end }}
 {{- end }}

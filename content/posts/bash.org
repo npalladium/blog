@@ -2,6 +2,8 @@
 #+date: 2026-02-28
 #+author: npalladium
 #+tags[]: bash shell programming
+#+publishdate: 2026-02-28T12:50:44Z
+#+lastmod: 2026-05-06T10:58:33+05:30
 
 * Scripting?
 Scripts are everywhere, from doing backups of your DB server to S3, listing all the namespaces in a Kubernetes cluster without pods, or simply bootstrapping your environments. A day doesn't go by without writing a new script or at least executing a script I wrote before.

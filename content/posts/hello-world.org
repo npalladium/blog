@@ -2,6 +2,8 @@
 #+date: 2026-02-27
 #+author: npalladium
 #+tags[]: fibonacci math poetry
+#+publishdate: 2026-02-27T19:03:01Z
+#+lastmod: 2026-05-05T22:09:16+05:30
 
 Welcome to the blog.
 

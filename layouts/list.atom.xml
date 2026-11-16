@@ -1,24 +1,21 @@
-{{- $pages := .Pages | first 20 -}}
+{{- $pages := .Pages.ByPublishDate.Reverse | first 20 -}}
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>{{ .Title }} — {{ .Site.Title }}</title>
-  <link href="{{ .Permalink }}atom.xml" rel="self" type="application/atom+xml"/>
-  <link href="{{ .Permalink }}" rel="alternate" type="text/html"/>
-  <id>{{ .Permalink }}</id>
+  <title>{{ .Title | htmlEscape }} — {{ .Site.Title | htmlEscape }}</title>
+  <link href="{{ .Permalink | htmlEscape }}atom.xml" rel="self" type="application/atom+xml"/>
+  <link href="{{ .Permalink | htmlEscape }}" rel="alternate" type="text/html"/>
+  <id>{{ .Permalink | htmlEscape }}</id>
   <updated>{{ now.Format "2006-01-02T15:04:05Z07:00" }}</updated>
-  <author><name>{{ .Site.Params.author }}</name></author>
+  <author><name>{{ .Site.Params.author | htmlEscape }}</name></author>
   {{ range $pages }}
   <entry>
-    <title>{{ .Title }}</title>
-    <link href="{{ .Permalink }}" rel="alternate" type="text/html"/>
-    <id>{{ .Permalink }}</id>
+    <title>{{ .Title | htmlEscape }}</title>
+    <link href="{{ .Permalink | htmlEscape }}" rel="alternate" type="text/html"/>
+    <id>{{ .Permalink | htmlEscape }}</id>
     <updated>{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}</updated>
-    <published>{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}</published>
-    <author>
-      <name>{{ with .Params.author }}{{ . }}{{ else }}{{ $.Site.Params.author }}{{ end }}</name>
-    </author>
-    {{ range .Params.tags }}<category term="{{ . }}"/>
-    {{ end }}<content type="html"><![CDATA[{{ .Content }}]]></content>
+    <published>{{ .PublishDate.Format "2006-01-02T15:04:05Z07:00" }}</published>
+    {{ range .Params.tags }}<category term="{{ . | htmlEscape }}"/>
+    {{ end }}<content type="html">{{ .Content | htmlEscape }}</content>
   </entry>
   {{ end }}
 </feed>

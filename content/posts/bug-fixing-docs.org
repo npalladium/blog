@@ -3,6 +3,9 @@
 #+AUTHOR: A Dev Tired of Debugging Docs
 #+AUTHOR: A Programmer Who Finally Read Their Own Docs
 #+DATE: 2026-01-31
+#+PUBLISHDATE: 2026-02-27T19:25:12Z
+#+LASTMOD: 2026-05-05T22:09:16+05:30
+#+TAGS[]: documentation debugging
 #+LATEX_HEADER: \usepackage{parskip}
 
 * The Iron Triangle of Fix Documentation

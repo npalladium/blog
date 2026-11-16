@@ -1,6 +1,9 @@
 #+TITLE: Deployment Strategies for Small Teams That Actually Work
 #+AUTHOR: Nikhil Reddy
 #+DATE: 2026-01-31
+#+PUBLISHDATE: 2026-05-05T21:21:54+05:30
+#+LASTMOD: 2026-05-05T22:09:16+05:30
+#+TAGS[]: deployment operations
 * Core Principles
 - Hard to Mess Up: Guard against fat fingers and tolerate infrastructure hiccups. A deploy that runs twice should produce the same result, not two versions of a service fighting over migrations in an infinite loop—which is exactly what happened when we accidentally deployed two versions to places that were supposed to be in lockstep, and they ran up and down migrations to reconcile forever. Account for partial failures and transient outages too; the system should absorb mistakes, not amplify them.
 - 2AM Fixable: Clear error messages, obvious rollback procedures, good logging, and simple architecture. The best 2 AM fix is often "revert to the last known good version." Make that trivial to do.

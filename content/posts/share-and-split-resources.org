@@ -1,6 +1,9 @@
 #+TITLE: Share Resources, Allow Them to Split
 #+AUTHOR:
 #+DATE: 2026-05-05
+#+PUBLISHDATE: 2026-05-05T21:21:54+05:30
+#+LASTMOD: 2026-05-05T22:09:16+05:30
+#+TAGS[]: software-design infrastructure
 #+OPTIONS: toc:2 num:nil
 #+STARTUP: showall
 

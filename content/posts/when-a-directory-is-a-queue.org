@@ -1,6 +1,9 @@
 #+TITLE: When a Directory Is a Queue
 #+AUTHOR: npalladium
 #+DATE: 2026-09-30
+#+PUBLISHDATE: 2026-11-16T20:13:48+05:30
+#+LASTMOD: 2026-11-16T20:12:52+05:30
+#+TAGS[]: software-design reliability
 #+OPTIONS: toc:nil num:nil
 #+STARTUP: showall
 

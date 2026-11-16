@@ -5,9 +5,10 @@ theme = "hugo-xmin"
 enableGitInfo = true
 
 [frontmatter]
-  # Dates: frontmatter field > git commit date > file mtime
-  date     = ["date", ":git", ":fileModTime"]
-  lastmod  = ["lastmod", ":git", ":fileModTime"]
+  # Keep authoring dates distinct from publication dates; absent publishDate uses date.
+  date        = ["date", ":git", ":fileModTime"]
+  publishDate = ["publishDate", "date", ":git", ":fileModTime"]
+  lastmod     = ["lastmod", ":git", ":fileModTime"]
 
 [params]
   author     = "npalladium"
@@ -29,7 +30,7 @@ enableGitInfo = true
   [outputFormats.Atom]
     mediaType     = "application/atom+xml"
     baseName      = "atom"
-    isPlainText   = false
+    isPlainText   = true
     rel           = "alternate"
     isHTML        = false
     noUgly        = true

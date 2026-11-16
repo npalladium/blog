@@ -9,9 +9,10 @@
 <ul>
   {{ $pages := .Pages }}
   {{ if .IsHome }}{{ $pages = .Site.RegularPages }}{{ end }}
-  {{ range (where $pages "Section" "!=" "") }}
+  {{ $pages = (where $pages "Section" "!=" "").ByPublishDate.Reverse }}
+  {{ range $pages }}
   <li>
-    <span class="date">{{ .Date.Format $.Site.Params.dateFormat }}</span>
+    <span class="date">{{ .PublishDate.Format $.Site.Params.dateFormat }}</span>
     <a href="{{ .RelPermalink }}">{{ .Title | markdownify }}</a>
     {{ range .Params.tags }}{{ with $.Site.GetPage (printf "/tags/%s" (. | urlize)) }}<a href="{{ .RelPermalink }}" class="tag">{{ .Title }}</a>{{ end }}{{ end }}
   </li>

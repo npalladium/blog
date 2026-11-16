@@ -1,5 +1,8 @@
 #+title: Keeping Things In Sync (Or Why We Can't Have Good Things)
 #+date: 2026-05-05
+#+publishdate: 2026-05-05T22:05:32+05:30
+#+lastmod: 2026-05-06T10:58:33+05:30
+#+tags[]: software-design testing
 
 When you have two related pieces of code that need to stay consistent—say, a data structure and its serialization logic, or an API and its documentation—you face a fundamental problem: how do you keep them from drifting apart?
 

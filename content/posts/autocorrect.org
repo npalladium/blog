@@ -1,5 +1,8 @@
 #+title: Autocorrect helps unravel what little is left of my sanity
 #+date: 2026-02-28
+#+publishdate: 2026-02-28T13:03:45Z
+#+lastmod: 2026-05-06T10:58:33+05:30
+#+tags[]: poetry humour
 #+author: npalladium
 
 I’m the world’s most frustrated man, \\
