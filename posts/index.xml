@@ -1,32 +1,50 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on npalladium</title><link>/blog/posts/</link><description>Recent content in Posts on npalladium</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 16 Nov 2026 20:12:52 +0530</lastBuildDate><atom:link href="/blog/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Operating "Systems": Three Uneasy Pieces</title><link>/blog/posts/ostup/</link><pubDate>Fri, 13 Nov 2026 00:00:00 +0000</pubDate><guid>/blog/posts/ostup/</guid><description>&lt;p&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on npalladium</title><link>https://npalladium.github.io/blog/posts/</link><description>Recent content in Posts on npalladium</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 16 Nov 2026 20:12:52 +0530</lastBuildDate><atom:link href="https://npalladium.github.io/blog/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>When a Directory Is a Queue</title><link>https://npalladium.github.io/blog/posts/when-a-directory-is-a-queue/</link><pubDate>Mon, 16 Nov 2026 20:13:48 +0530</pubDate><guid isPermaLink="false">/blog/posts/when-a-directory-is-a-queue/</guid><description>&lt;p&gt;
+Consider a native desktop application that produces reports, recordings, or diagnostic bundles. Those artifacts live on the user&amp;#39;s machine first; creating one does not necessarily trigger an upload.&lt;/p&gt;
+&lt;p&gt;
+The delay may be deliberate. On a metered connection, uploading immediately may cost more than waiting. An offline-first application also needs to let the user keep working without a reachable server. Cloud delivery is a separate operation that may happen later, after the app has closed and restarted.&lt;/p&gt;</description></item><item><title>Operating "Systems": Three Uneasy Pieces</title><link>https://npalladium.github.io/blog/posts/ostup/</link><pubDate>Mon, 16 Nov 2026 19:08:54 +0530</pubDate><guid isPermaLink="false">/blog/posts/ostup/</guid><description>&lt;p&gt;
 Three articles recently forced me to reconsider how I think about constraints and flexibility:&lt;sup class="footnote-reference"&gt;&lt;a id="footnote-reference-1" href="#footnote-1"&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://entropicthoughts.com/deliberate-abstraction"&gt;Deliberate Abstraction&lt;/a&gt; (Entropic Thoughts) is internally compelling, yet something about its treatment of domain understanding and abstraction bothers me.&lt;/li&gt;
 &lt;li&gt;Sean Goedecke&amp;#39;s &lt;a href="https://www.seangoedecke.com/invalid-states/"&gt;Make Invalid States Unrepresentable Considered Harmful&lt;/a&gt; offers engineering judgment I deeply respect, though I am reluctant to adopt his general preference for fewer hard constraints.&lt;/li&gt;
 &lt;li&gt;Finally, Alex Gaynor&amp;#39;s &lt;a href="https://alexgaynor.net/2025/mar/25/postels-law-and-the-three-ring-circus/"&gt;Postel&amp;#39;s Law and the Three Ring Circus&lt;/a&gt; completely changed my mind about the robustness principle.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;I approach these arguments wearing both software-engineering and infrastructure/SRE hats. I’ve worked on legacy systems containing semantically nonsensical data and poorly understood states, though I readily admit I haven&amp;#39;t worked at the organizational and service scale that informs some of Sean&amp;#39;s conclusions. The central observation tying these pieces together is that both imposing and omitting constraints create costs that can be difficult to identify in advance.&lt;/p&gt;</description></item><item><title>When a Directory Is a Queue</title><link>/blog/posts/when-a-directory-is-a-queue/</link><pubDate>Wed, 30 Sep 2026 00:00:00 +0000</pubDate><guid>/blog/posts/when-a-directory-is-a-queue/</guid><description>&lt;p&gt;
-Consider a native desktop application that produces reports, recordings, or diagnostic bundles. Those artifacts live on the user&amp;#39;s machine first; creating one does not necessarily trigger an upload.&lt;/p&gt;
-&lt;p&gt;
-The delay may be deliberate. On a metered connection, uploading immediately may cost more than waiting. An offline-first application also needs to let the user keep working without a reachable server. Cloud delivery is a separate operation that may happen later, after the app has closed and restarted.&lt;/p&gt;</description></item><item><title>Keeping Things In Sync (Or Why We Can't Have Good Things)</title><link>/blog/posts/keeping-things-in-sync/</link><pubDate>Tue, 05 May 2026 00:00:00 +0000</pubDate><guid>/blog/posts/keeping-things-in-sync/</guid><description>&lt;p&gt;
+&lt;p&gt;I approach these arguments wearing both software-engineering and infrastructure/SRE hats. I’ve worked on legacy systems containing semantically nonsensical data and poorly understood states, though I readily admit I haven&amp;#39;t worked at the organizational and service scale that informs some of Sean&amp;#39;s conclusions. The central observation tying these pieces together is that both imposing and omitting constraints create costs that can be difficult to identify in advance.&lt;/p&gt;</description></item><item><title>Keeping Things In Sync (Or Why We Can't Have Good Things)</title><link>https://npalladium.github.io/blog/posts/keeping-things-in-sync/</link><pubDate>Tue, 05 May 2026 22:05:32 +0530</pubDate><guid isPermaLink="false">/blog/posts/keeping-things-in-sync/</guid><description>&lt;p&gt;
 When you have two related pieces of code that need to stay consistent—say, a data structure and its serialization logic, or an API and its documentation—you face a fundamental problem: how do you keep them from drifting apart?&lt;/p&gt;
 &lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
 The Cowboy Approach
 &lt;/h2&gt;
 &lt;div id="outline-text-headline-1" class="outline-text-2"&gt;
-&lt;p&gt;Just… don&amp;#39;t worry about it. Write your struct, write your JSON handler, ship it. If they drift apart, you&amp;#39;ll find out in production when a customer complains. This works great until it doesn&amp;#39;t, which is usually around 2 AM on a Friday.&lt;/p&gt;</description></item><item><title>Share Resources, Allow Them to Split</title><link>/blog/posts/share-and-split-resources/</link><pubDate>Tue, 05 May 2026 00:00:00 +0000</pubDate><guid>/blog/posts/share-and-split-resources/</guid><description>&lt;p&gt;
-There&amp;#39;s a quiet design principle that pays for itself many times over in microservice architectures:&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;&lt;strong&gt;Share infrastructure resources where you can. Write services as if you weren&amp;#39;t.&lt;/strong&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;
-The two halves of the principle pull in different directions on purpose:&lt;/p&gt;
+&lt;p&gt;Just… don&amp;#39;t worry about it. Write your struct, write your JSON handler, ship it. If they drift apart, you&amp;#39;ll find out in production when a customer complains. This works great until it doesn&amp;#39;t, which is usually around 2 AM on a Friday.&lt;/p&gt;</description></item><item><title>Deployment Strategies for Small Teams That Actually Work</title><link>https://npalladium.github.io/blog/posts/small-deployment-strategies/</link><pubDate>Tue, 05 May 2026 21:21:54 +0530</pubDate><guid isPermaLink="false">/blog/posts/small-deployment-strategies/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
+&lt;h2 id="headline-1"&gt;
+Core Principles
+&lt;/h2&gt;
+&lt;div id="outline-text-headline-1" class="outline-text-2"&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Sharing&lt;/strong&gt; is what you do at deployment time, to keep operational cost and complexity down.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Splitting-readiness&lt;/strong&gt; is what you do at design time, to keep your future options open.&lt;/li&gt;
+&lt;li&gt;Hard to Mess Up: Guard against fat fingers and tolerate infrastructure hiccups. A deploy that runs twice should produce the same result, not two versions of a service fighting over migrations in an infinite loop—which is exactly what happened when we accidentally deployed two versions to places that were supposed to be in lockstep, and they ran up and down migrations to reconcile forever. Account for partial failures and transient outages too; the system should absorb mistakes, not amplify them.&lt;/li&gt;
+&lt;li&gt;2AM Fixable: Clear error messages, obvious rollback procedures, good logging, and simple architecture. The best 2 AM fix is often &amp;#34;revert to the last known good version.&amp;#34; Make that trivial to do.&lt;/li&gt;
+&lt;li&gt;Hand-off-able: Standard tooling, few or no clever tricks. Common tasks automated, both SOPs and gotchas documented. A new team member should be able to deploy without a brain dump from the person who set it up.&lt;/li&gt;
+&lt;li&gt;Cost-Conscious: Don&amp;#39;t spin up a Kubernetes cluster for a service that runs fine on a single box. Question whether the infrastructure is hiding problems or solving them.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;A service that&amp;#39;s been written correctly doesn&amp;#39;t know or care whether its bucket, its database, or its domain is shared with five other services or entirely its own. That ignorance is the feature. This is a specific instance of the rule behind Bezos&amp;#39; famous API mandate: all service communication goes through published interfaces; everything else—shared memory, direct linking, back doors—is forbidden. Two services sharing a bucket is an operational convenience; one service &lt;em&gt;knowing&lt;/em&gt; it shares a bucket is a coupling that bypasses the service contract.&lt;/p&gt;</description></item><item><title>Things I've Come to Believe In: A Technical Stack Confession</title><link>/blog/posts/things-i-believe-in/</link><pubDate>Tue, 05 May 2026 00:00:00 +0000</pubDate><guid>/blog/posts/things-i-believe-in/</guid><description>&lt;p&gt;
+&lt;div id="outline-container-headline-2" class="outline-3"&gt;
+&lt;h3 id="headline-2"&gt;
+What that means
+&lt;/h3&gt;
+&lt;div id="outline-text-headline-2" class="outline-text-3"&gt;
+&lt;ul&gt;
+&lt;li&gt;Automated: Manual deployment steps are bugs waiting to happen. Every deployment should be triggered by a single command or git push. No SSH-ing into servers to run commands in sequence. No &amp;#34;remember to restart this service after that one.&amp;#34; Automation catches mistakes that humans make when tired or rushed. It also serves as living documentation—the deployment script shows exactly what happens, in what order.&lt;/li&gt;
+&lt;li&gt;Immutable and Declarative: Don&amp;#39;t patch running systems—replace them. Build a new image with Docker or Packer, deploy it, tear down the old one. Pair that with a declarative desired-state system that&amp;#39;s idempotent: describe what you want, let the tooling converge to it, and run it again without fear of side effects.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id="outline-container-headline-3" class="outline-2"&gt;
+&lt;h2 id="headline-3"&gt;
+Docker Compose/Podman Quadlets on a Single Server
+&lt;/h2&gt;
+&lt;div id="outline-text-headline-3" class="outline-text-2"&gt;
+&lt;p&gt;This is my go-to recommendation for teams just starting out or running low-traffic services.&lt;/p&gt;</description></item><item><title>Things I've Come to Believe In: A Technical Stack Confession</title><link>https://npalladium.github.io/blog/posts/things-i-believe-in/</link><pubDate>Tue, 05 May 2026 21:21:54 +0530</pubDate><guid isPermaLink="false">/blog/posts/things-i-believe-in/</guid><description>&lt;p&gt;
 These aren&amp;#39;t religious convictions—I won&amp;#39;t argue about them at parties (maybe at KubeCon)—but they&amp;#39;ve proven themselves reliable enough that I reach for them by default.&lt;/p&gt;
 &lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
@@ -46,7 +64,18 @@ Driving Principles
 Containers
 &lt;/h2&gt;
 &lt;div id="outline-text-headline-2" class="outline-text-2"&gt;
-&lt;p&gt;&lt;em&gt;2 AM Fixable, No toil&lt;/em&gt;&lt;/p&gt;</description></item><item><title>Autocorrect helps unravel what little is left of my sanity</title><link>/blog/posts/autocorrect/</link><pubDate>Sat, 28 Feb 2026 00:00:00 +0000</pubDate><guid>/blog/posts/autocorrect/</guid><description>&lt;p&gt;
+&lt;p&gt;&lt;em&gt;2 AM Fixable, No toil&lt;/em&gt;&lt;/p&gt;</description></item><item><title>Share Resources, Allow Them to Split</title><link>https://npalladium.github.io/blog/posts/share-and-split-resources/</link><pubDate>Tue, 05 May 2026 21:21:54 +0530</pubDate><guid isPermaLink="false">/blog/posts/share-and-split-resources/</guid><description>&lt;p&gt;
+There&amp;#39;s a quiet design principle that pays for itself many times over in microservice architectures:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Share infrastructure resources where you can. Write services as if you weren&amp;#39;t.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;
+The two halves of the principle pull in different directions on purpose:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Sharing&lt;/strong&gt; is what you do at deployment time, to keep operational cost and complexity down.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Splitting-readiness&lt;/strong&gt; is what you do at design time, to keep your future options open.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;A service that&amp;#39;s been written correctly doesn&amp;#39;t know or care whether its bucket, its database, or its domain is shared with five other services or entirely its own. That ignorance is the feature. This is a specific instance of the rule behind Bezos&amp;#39; famous API mandate: all service communication goes through published interfaces; everything else—shared memory, direct linking, back doors—is forbidden. Two services sharing a bucket is an operational convenience; one service &lt;em&gt;knowing&lt;/em&gt; it shares a bucket is a coupling that bypasses the service contract.&lt;/p&gt;</description></item><item><title>Autocorrect helps unravel what little is left of my sanity</title><link>https://npalladium.github.io/blog/posts/autocorrect/</link><pubDate>Sat, 28 Feb 2026 13:03:45 +0000</pubDate><guid isPermaLink="false">/blog/posts/autocorrect/</guid><description>&lt;p&gt;
 I’m the world’s most frustrated man, &lt;br&gt;
 My brain is fried, my thumbs are weak. &lt;br&gt;
 I thought more AI would solve my problem, &lt;br&gt;
@@ -59,7 +88,7 @@ The things I actually wanted to say.&lt;/p&gt;
 &lt;p&gt;Omakes:&lt;/p&gt;
 &lt;p&gt;
 &amp;gt; I thought more AI would solve my problem, &lt;br&gt;
-&amp;gt; But it crushes the words I speak.&lt;/p&gt;</description></item><item><title>Scripting For Profit</title><link>/blog/posts/bash/</link><pubDate>Sat, 28 Feb 2026 00:00:00 +0000</pubDate><guid>/blog/posts/bash/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
+&amp;gt; But it crushes the words I speak.&lt;/p&gt;</description></item><item><title>Scripting For Profit</title><link>https://npalladium.github.io/blog/posts/bash/</link><pubDate>Sat, 28 Feb 2026 12:50:44 +0000</pubDate><guid isPermaLink="false">/blog/posts/bash/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
 Scripting?
 &lt;/h2&gt;
@@ -68,7 +97,24 @@ Scripting?
 &lt;p&gt;
 Scripts make life easier. They save time on repetitive tasks. They are ubiquitous.&lt;/p&gt;
 &lt;p&gt;
-Having been writing scripts for a while &lt;sup class="footnote-reference"&gt;&lt;a id="footnote-reference-1" href="#footnote-1"&gt;1&lt;/a&gt;&lt;/sup&gt;, I wanted to write an article to:&lt;/p&gt;</description></item><item><title>Hello, World</title><link>/blog/posts/hello-world/</link><pubDate>Fri, 27 Feb 2026 00:00:00 +0000</pubDate><guid>/blog/posts/hello-world/</guid><description>&lt;p&gt;
+Having been writing scripts for a while &lt;sup class="footnote-reference"&gt;&lt;a id="footnote-reference-1" href="#footnote-1"&gt;1&lt;/a&gt;&lt;/sup&gt;, I wanted to write an article to:&lt;/p&gt;</description></item><item><title>Writing Issue-Fixing Documentation That Actually Fixes Issues</title><link>https://npalladium.github.io/blog/posts/bug-fixing-docs/</link><pubDate>Fri, 27 Feb 2026 19:25:12 +0000</pubDate><guid isPermaLink="false">/blog/posts/bug-fixing-docs/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
+&lt;h2 id="headline-1"&gt;
+The Iron Triangle of Fix Documentation
+&lt;/h2&gt;
+&lt;div id="outline-text-headline-1" class="outline-text-2"&gt;
+&lt;p&gt;Every issue-fixing document must contain these three elements, or you&amp;#39;re just publishing creative fiction:&lt;/p&gt;
+&lt;div id="outline-container-headline-2" class="outline-3"&gt;
+&lt;h3 id="headline-2"&gt;
+Pre-Flight Check: Confirming You Have the Right Problem
+&lt;/h3&gt;
+&lt;div id="outline-text-headline-2" class="outline-text-3"&gt;
+&lt;p&gt;Before users start running commands they found on Stack Overflow, make them verify they actually have the issue your doc addresses. Include:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Specific error messages to search for&lt;/li&gt;
+&lt;li&gt;Symptoms that distinguish this from similar issues&lt;/li&gt;
+&lt;li&gt;Version numbers, environment details, or configuration states&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Remember what every old hand knows: Half of support tickets are people applying the wrong fix to the right problem. The other half are people applying the right fix to the wrong problem.&lt;/p&gt;</description></item><item><title>Hello, World</title><link>https://npalladium.github.io/blog/posts/hello-world/</link><pubDate>Fri, 27 Feb 2026 19:03:01 +0000</pubDate><guid isPermaLink="false">/blog/posts/hello-world/</guid><description>&lt;p&gt;
 Welcome to the blog.&lt;/p&gt;
 &lt;div id="outline-container-headline-1" class="outline-2"&gt;
 &lt;h2 id="headline-1"&gt;
@@ -116,50 +162,4 @@ Math plus poetry yields the Fib.&lt;/p&gt;
 &lt;p&gt;
 — Pincus, Gregory K.&lt;/p&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description></item><item><title>Deployment Strategies for Small Teams That Actually Work</title><link>/blog/posts/small-deployment-strategies/</link><pubDate>Sat, 31 Jan 2026 00:00:00 +0000</pubDate><guid>/blog/posts/small-deployment-strategies/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
-&lt;h2 id="headline-1"&gt;
-Core Principles
-&lt;/h2&gt;
-&lt;div id="outline-text-headline-1" class="outline-text-2"&gt;
-&lt;ul&gt;
-&lt;li&gt;Hard to Mess Up: Guard against fat fingers and tolerate infrastructure hiccups. A deploy that runs twice should produce the same result, not two versions of a service fighting over migrations in an infinite loop—which is exactly what happened when we accidentally deployed two versions to places that were supposed to be in lockstep, and they ran up and down migrations to reconcile forever. Account for partial failures and transient outages too; the system should absorb mistakes, not amplify them.&lt;/li&gt;
-&lt;li&gt;2AM Fixable: Clear error messages, obvious rollback procedures, good logging, and simple architecture. The best 2 AM fix is often &amp;#34;revert to the last known good version.&amp;#34; Make that trivial to do.&lt;/li&gt;
-&lt;li&gt;Hand-off-able: Standard tooling, few or no clever tricks. Common tasks automated, both SOPs and gotchas documented. A new team member should be able to deploy without a brain dump from the person who set it up.&lt;/li&gt;
-&lt;li&gt;Cost-Conscious: Don&amp;#39;t spin up a Kubernetes cluster for a service that runs fine on a single box. Question whether the infrastructure is hiding problems or solving them.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;div id="outline-container-headline-2" class="outline-3"&gt;
-&lt;h3 id="headline-2"&gt;
-What that means
-&lt;/h3&gt;
-&lt;div id="outline-text-headline-2" class="outline-text-3"&gt;
-&lt;ul&gt;
-&lt;li&gt;Automated: Manual deployment steps are bugs waiting to happen. Every deployment should be triggered by a single command or git push. No SSH-ing into servers to run commands in sequence. No &amp;#34;remember to restart this service after that one.&amp;#34; Automation catches mistakes that humans make when tired or rushed. It also serves as living documentation—the deployment script shows exactly what happens, in what order.&lt;/li&gt;
-&lt;li&gt;Immutable and Declarative: Don&amp;#39;t patch running systems—replace them. Build a new image with Docker or Packer, deploy it, tear down the old one. Pair that with a declarative desired-state system that&amp;#39;s idempotent: describe what you want, let the tooling converge to it, and run it again without fear of side effects.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id="outline-container-headline-3" class="outline-2"&gt;
-&lt;h2 id="headline-3"&gt;
-Docker Compose/Podman Quadlets on a Single Server
-&lt;/h2&gt;
-&lt;div id="outline-text-headline-3" class="outline-text-2"&gt;
-&lt;p&gt;This is my go-to recommendation for teams just starting out or running low-traffic services.&lt;/p&gt;</description></item><item><title>Writing Issue-Fixing Documentation That Actually Fixes Issues</title><link>/blog/posts/bug-fixing-docs/</link><pubDate>Sat, 31 Jan 2026 00:00:00 +0000</pubDate><guid>/blog/posts/bug-fixing-docs/</guid><description>&lt;div id="outline-container-headline-1" class="outline-2"&gt;
-&lt;h2 id="headline-1"&gt;
-The Iron Triangle of Fix Documentation
-&lt;/h2&gt;
-&lt;div id="outline-text-headline-1" class="outline-text-2"&gt;
-&lt;p&gt;Every issue-fixing document must contain these three elements, or you&amp;#39;re just publishing creative fiction:&lt;/p&gt;
-&lt;div id="outline-container-headline-2" class="outline-3"&gt;
-&lt;h3 id="headline-2"&gt;
-Pre-Flight Check: Confirming You Have the Right Problem
-&lt;/h3&gt;
-&lt;div id="outline-text-headline-2" class="outline-text-3"&gt;
-&lt;p&gt;Before users start running commands they found on Stack Overflow, make them verify they actually have the issue your doc addresses. Include:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Specific error messages to search for&lt;/li&gt;
-&lt;li&gt;Symptoms that distinguish this from similar issues&lt;/li&gt;
-&lt;li&gt;Version numbers, environment details, or configuration states&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Remember what every old hand knows: Half of support tickets are people applying the wrong fix to the right problem. The other half are people applying the right fix to the wrong problem.&lt;/p&gt;</description></item></channel></rss>
+&lt;/div&gt;</description></item></channel></rss>
