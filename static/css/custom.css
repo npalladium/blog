@@ -1,7 +1,108 @@
+body {
+  max-width: 70ch;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+.article-meta {
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  margin-block: 2.5rem 1.75rem;
+  text-align: start;
+}
+
+.article-meta h1 {
+  margin-block: 0 0.5em;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.article-meta .title {
+  font-size: inherit;
+}
+
 .article-meta .authors,
 .article-meta .dates {
   font-size: 0.85em;
   margin: 0.2em 0;
+  color: #555;
+}
+
+main {
+  hyphens: none;
+  overflow-wrap: break-word;
+}
+
+main :is(h2, h3, h4) {
+  margin-block: 1.25em 0.5em;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+main :is(ul, ol) {
+  padding-inline-start: 1.5em;
+}
+
+main li + li {
+  margin-block-start: 0.35em;
+}
+
+main li > :is(ul, ol) {
+  margin-block: 0.5em;
+}
+
+pre {
+  overflow-wrap: normal;
+  line-height: 1.5;
+}
+
+a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.footnotes {
+  margin-block-start: 3rem;
+  font-size: 0.95em;
+}
+
+/* Org footnotes use a label and body rather than an ordered list. */
+.footnote-definition {
+  display: grid;
+  grid-template-columns: 2ch minmax(0, 1fr);
+  column-gap: 0.75em;
+  align-items: baseline;
+  margin-block: 1.25em;
+}
+
+.footnote-definition > sup {
+  font-size: 0.8em;
+  line-height: inherit;
+  vertical-align: baseline;
+}
+
+.footnote-body > :first-child {
+  margin-block-start: 0;
+}
+
+.footnote-body > :last-child {
+  margin-block-end: 0;
+}
+
+.footnote-definition > sup[id],
+.footnote-reference > a[id],
+.footnotes li[id] {
+  scroll-margin-block-start: 2rem;
+}
+
+.footnote-definition:has(> sup:target),
+.footnotes li:target,
+.footnote-reference > a:target {
+  background: #fff4c2;
+  outline: 2px solid #997400;
+  outline-offset: 0.25em;
 }
 
 a.tag {

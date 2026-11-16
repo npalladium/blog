@@ -14,3 +14,4 @@ Local modifications:
 - Author resolved from frontmatter first, then git commit metadata
 - KaTeX auto-render injected via `head_custom.html`
 - Atom feed output format added alongside the built-in RSS
+- Reading typography, article headers, and footnote layout/navigation styled in `static/css/custom.css`
