@@ -1,0 +1,39 @@
+#+TITLE: Greenspun's Extended Family
+#+AUTHOR: npalladium
+#+DATE: 2026-11-16
+#+PUBLISHDATE: 2026-11-16T17:43:26Z
+#+LASTMOD: 2026-11-16T17:43:26Z
+#+TAGS[]: software-design programming
+#+OPTIONS: toc:nil num:nil
+#+STARTUP: showall
+
+[[https://philip.greenspun.com/bboard/q-and-a-fetch-msg?msg_id=000tgU&topic=Ask%20Philip&topic_id=22][Greenspun's tenth rule]] says that a sufficiently complicated C or Fortran program ends up containing a badly implemented half of Common Lisp.[fn:1]
+
+I keep seeing relatives of that rule: a system avoids an explicit mechanism, then gradually recreates parts of it through scattered code and conventions.[fn:2]
+
+- *Type systems.* The language can't express which combinations of values are valid, so the model's constraints end up in validators, assertions, comments, and developer discipline.[fn:3]
+- *State machines.* A few flags, filenames, and callbacks determine what can happen next. Soon there are permitted transitions, forbidden combinations, and recovery rules.[fn:4]
+- *Configuration languages.* Configuration starts with values, then gains conditions, expressions, and rules for evaluating them.[fn:5]
+- *Build systems.* A script makes thumbnails from images, and another packages them for deployment. To save time, the scripts skip work they've already done. But replacing an image now means regenerating its thumbnail and rebuilding the package, in that order. The scripts need to know which files each step uses and produces, and when a previous result is safe to reuse.
+- *Template engines.* String replacement in HTML emails grows conditions, loops, and reusable fragments. Soon there are variable scopes, missing-value behavior, and rules for escaping values in different output contexts. The replacement helper has acquired a syntax and evaluation rules of its own.
+- *Job schedulers and queues.* A timer invokes a function, or a queue feeds a worker. “Message queues/streams are enough.” They may be. Then the application needs delayed execution, retry policies, job dependencies, cancellation, or recovery after a worker dies.
+
+A few explicit checks or a small state machine may be exactly enough. A dedicated library or richer language has costs too.[fn:6]
+
+The trouble starts when “we don't need one” is mistaken for “we haven't built one.” Then the design escapes review while its rules accumulate in code, conventions, and memory. I'd rather recognize the homemade version[fn:7] and decide whether it's enough.[fn:8]
+
+[fn:1] The [[https://knowyourmeme.com/memes/we-have-food-at-home][“we have X at home” meme]] could supply the illustration.
+
+[fn:2] Parsers belong in this family too, but I was too lazy to write about them. Raku's [[https://docs.raku.org/language/grammars][grammars]] offer a nice middle ground between a hodgepodge of regexes and glue code and a separate parser-generator toolchain: regex-like notation, but with named, composable rules.
+
+[fn:3] See [[https://npalladium.github.io/blog/posts/ostup/][Three Uneasy Pieces]].
+
+[fn:4] In [[https://npalladium.github.io/blog/posts/when-a-directory-is-a-queue/][When a Directory Is a Queue]], a filename distinguishes an incomplete report from one ready to upload; an acknowledgement marker separates pending delivery from pending cleanup. The states exist even without a transition table.
+
+[fn:5] Mike Hadlow's [[https://mikehadlow.blogspot.com/2012/05/configuration-complexity-clock.html][The Configuration Complexity Clock]] follows that trip around to writing code again, except now in a language the team must also maintain and build tooling for.
+
+[fn:6] Luke Plant's [[https://lukeplant.me.uk/blog/posts/yagni-exceptions/][YAGNI exceptions]] adds a useful qualification: deferring features is easier when the underlying platform is already flexible and featureful. Using a capable foundation can be what makes a small application possible.
+
+[fn:7] Not-invented-here syndrome can lead here, but so can a succession of locally reasonable changes to something that genuinely started small.
+
+[fn:8] I try to recognize how code and logic are accumulating, then define a "protocol/interface" that lets me replace the implementation later. Neither step is free. Looking ahead can become speculation, and the protocol can bake in assumptions I later regret. I’m willing to pay some of that cost upfront to make changing course easier later, though I’ve misjudged that trade-off plenty of times. ¯\_(ツ)_/¯
