@@ -3,7 +3,6 @@
 #+DATE: 2026-11-13
 #+OPTIONS: toc:2 num:nil
 #+STARTUP: showall
-#+DRAFT: false
 
 Three articles recently forced me to reconsider how I think about constraints and flexibility:[fn:1]
 
