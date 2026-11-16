@@ -1,0 +1,136 @@
+#+TITLE: Operating "Systems": Three Uneasy Pieces
+#+AUTHOR: npalladium
+#+DATE: 2026-11-13
+#+OPTIONS: toc:2 num:nil
+#+STARTUP: showall
+#+DRAFT: true
+
+Three articles recently forced me to reconsider how I think about constraints and flexibility:[fn:1]
+
+- [[https://entropicthoughts.com/deliberate-abstraction][Deliberate Abstraction]] (Entropic Thoughts) is internally compelling, yet something about its treatment of domain understanding and abstraction bothers me.
+- Sean Goedecke's [[https://www.seangoedecke.com/invalid-states/][Make Invalid States Unrepresentable Considered Harmful]] offers engineering judgment I deeply respect, though I am reluctant to adopt his general preference for fewer hard constraints.
+- Finally, Alex Gaynor's [[https://alexgaynor.net/2025/mar/25/postels-law-and-the-three-ring-circus/][Postel's Law and the Three Ring Circus]] completely changed my mind about the robustness principle.
+
+I approach these arguments wearing both software-engineering and infrastructure/SRE hats. I’ve worked on legacy systems containing semantically nonsensical data and poorly understood states, though I readily admit I haven't worked at the organizational and service scale that informs some of Sean's conclusions. The central observation tying these pieces together is that both imposing and omitting constraints create costs that can be difficult to identify in advance.
+
+* A brief prelude: Epistemology, Data, and Reality
+My philosophy on software modeling stems largely from William Kent's [[https://technicspub.com/data-and-reality/][Data and Reality]], especially its treatment of entities, identity, and the inherent ambiguity of modeling reality. A Hacker News commenter, [[https://news.ycombinator.com/item?id=46076589][exceptione]], once gave an unusually precise articulation of a modeling heuristic I had independently come to use:
+
+- Know the problem domain.
+- Think deeply about a conceptual model capturing its relevant aspects.
+- Name concepts carefully because naming feeds back into understanding and modeling.
+- Use a sufficiently expressive language and type system to implement that model.[fn:2]
+
+The core epistemological problem is that reality does not arrive neatly partitioned into entities, relationships, and invariants. Our models are interpretations shaped by what we need them to do. I try to distinguish evidence from assumptions, conventions, and policies, using domain expertise to inform rather than settle those judgments.[fn:3] Even apparently fundamental invariants may just be mistaken assumptions, and modeling is highly iterative—difficulties with naming, representation, and implementation frequently reveal flaws in our understanding. A model is not reality, but that does not make precision in the model unnecessary.[fn:4]
+
+* Piece I—Abstraction and Reality
+
+In conversation with [[https://entropicthoughts.com/deliberate-abstraction][Deliberate Abstraction]], there is much the article gets right. Features do not necessarily correspond to components; functionality often emerges from their interaction, and letting a flowchart dictate module boundaries usually produces brittle designs. Modules should hide design decisions, not merely implementation details. Inside-out design can provide general mechanisms for building increasingly specialized layers. Delaying commitments preserves opportunities for change. I recognize two of my biggest influences here: [[https://cacm.acm.org/research/on-the-criteria-to-be-used-in-decomposing-systems-into-modules/][David Parnas on isolating decisions likely to change]] and [[https://web.stanford.edu/~ouster/cgi-bin/aposd.php][John Ousterhout on deep modules that conceal substantial implementation complexity]].
+
+Yet a discomfort remains: requirements are not the same as domain understanding. The article argues that changing user requirements make them an unreliable foundation for design. That is reasonable if requirements mean current features, workflows, or implementation prescriptions.
+
+But understanding what users need and why is also our principal means of discovering the domain. Starting with a concrete problem doesn't imply decomposing the software into procedural steps. A deeply understood domain can produce highly general, composable abstractions. We can reject feature-driven decomposition without rejecting problem-driven conceptual modeling.
+
+When the author recommends building around stable fundamentals, we have to ask: which concepts are fundamental? Returning to Kent, identity, classification, and relationships depend partly on how we choose to interpret reality. A supposed domain law might merely be a convention, a policy that depends on the situation, or a mistaken assumption. What appears general may reflect the limits of our current experience.
+
+My interpretation of Parnas and Ousterhout is that deep abstractions should preserve domain semantics, not merely expose generic machinery. The best boundaries frequently follow ownership of knowledge and responsibility.
+
+In [[https://npalladium.github.io/blog/posts/share-and-split-resources/][Share Resources, Allow Them to Split]], I argued that physical co-location must not imply logical coupling. Multiple services can share a database, bucket, or cluster, but each service should own its logical resources and treat their physical placement as an external decision. Sharing a substrate must not grant implicit access to other services' data or internal representations. These boundaries enable sharing, splitting, relocating, or isolating infrastructure as requirements change.
+
+Cross-component operations can become less convenient. Enforcement and testing add work, logical independence does not eliminate physical failure domains, and splitting resources still requires operational coordination. But restricting what a component can know and access can increase flexibility. The value of an abstraction lies in the decisions it isolates, the semantics it preserves, and the changes it enables—not just its generality.
+
+* Piece II—In Defense of Constraints, With Reservations
+
+If constraints can preserve optionality, how aggressively should we enforce them when our understanding of the domain might be wrong? Sean Goedecke's [[https://www.seangoedecke.com/invalid-states/][Make Invalid States Unrepresentable Considered Harmful]] argues that some invalid states need to remain representable to accommodate unusual business requirements and operational exceptions. His examples span state machines, foreign keys, and required wire-protocol fields. The disagreement concerns the relative costs and the generality of the prescription.
+
+In the legacy systems I’ve worked on, insufficient constraints have been costly. There are two failures here: invalid states admitted, and unvalidated states trusted. When software admits invalid states, it persists data that contradicts the semantics of the domain. Subsequent writes and computations build upon that data, and inconsistency becomes part of the system's history.
+
+When unvalidated states are trusted, data crosses boundaries into code that assumes guarantees it lacks. Failures occur far from the original problem, leading to difficult diagnosis, manual data repair, and defensive code scattered throughout the application. The absence of constraints does not necessarily eliminate their cost. It can distribute that cost across the system and its future.
+
+In one legacy system, understanding the custom data formats was itself difficult. Just when I thought I understood a rule, another record contradicted it. Fixing that case often broke something else, and some bugs only surfaced much later. Recovering the missing guarantees meant investigation, manual sampling, assertions, and a growing test suite.
+
+Making invalid states unrepresentable (MISU) requires distinguishing three concepts:[fn:5]
+
+- *Representability*: what information the system can retain.
+- *Validity*: what guarantees a representation establishes.
+- *Permitted transitions*: what operations can produce or modify that state.
+
+A raw record may be incomplete; a validated domain value satisfies the invariants its type promises; an executable operation may require additional preconditions. These need not use the same representation.
+
+These distinctions matter: unknown is not invalid[fn:6], reported is not verified, provisional is not established, and an unexpected future value is not automatically meaningless. Make illegal states unrepresentable at the layer where their illegality is an invariant, without confusing context-specific policies with universal domain constraints.
+
+I find it useful to separate three questions about a contract:
+
+- Does the boundary reject inputs outside its contract?
+- Does the implementation handle inputs inside its contract?
+- Does the contract represent the right domain semantics?
+
+Those questions concern what a contract guarantees. Exceptional business operations raise a related question: how can an operation depart from the normal transition rules without becoming arbitrary mutation? I agree with Sean that such exceptions need not justify expanding the normal state-transition graph. But they still carry side effects, consistency obligations, and security requirements. Bypassing a transition may violate much more than a status field.
+
+An exceptional operation should have deliberately designed authority, preconditions, postconditions, and observability. Repair operations may need different guarantees from normal operations. Escape hatches can be necessary without becoming unrestricted backdoors.
+
+Database constraints can be expensive to evolve at scale, but a semantic relationship is distinct from the mechanism enforcing it. Some relationships require referential integrity; others represent historical associations that must survive deletion. SQL schemas are both persistence contracts and possible authoritative enforcement boundaries. Sometimes relaxing database-level enforcement makes sense, but it shifts responsibility elsewhere. The enforcement mechanism depends on the domain's meaning, the deployment architecture, and the consequences of violating the invariant.
+
+External wire schemas often serve software that changes independently, while internal types are generally easier to change together. Required Protobuf fields illustrate how rigid wire contracts make deployment coordination dangerous, but parsers can convert flexible wire representations into strictly validated internal types. Compatibility and validity are distinct properties.
+
+Developing this argument made me realize I'd made an analogous cost-accounting omission in [[https://npalladium.github.io/blog/posts/share-and-split-resources/][Share Resources, Allow Them to Split]]. I'd described the cost of preserving operational flexibility as essentially zero. That's too strong: ownership boundaries, configuration conventions, isolation, testing, and foregone shortcuts have costs. Even so, I stand by my experience that their marginal cost is usually small when adopted from the beginning, whereas retrofitting those boundaries is incredibly expensive.
+
+As a developer, I pay for abstraction and implementation complexity. As an infrastructure/SRE engineer, I pay for coupling, inflexible deployments, and opaque failures. The question isn't whether a constraint has a cost, but how that cost compares with the alternatives, including its absence and its later introduction.[fn:7]
+
+Optionality is not just the number of states a system permits today; it also concerns our future ability to understand and change the system. Sometimes preserving it means introducing constraints; sometimes it means delaying them or choosing a less rigid enforcement boundary. MISU is a useful heuristic, not an absolute.
+
+* Piece III—Robustness and the Three-Ring Circus
+
+So far, the discussion has mostly concerned individual applications. But permissiveness can have severe consequences even when an application's internal model remains perfectly valid. This is how Alex Gaynor changed my mind about [[https://alexgaynor.net/2025/mar/25/postels-law-and-the-three-ring-circus/][Postel's Law]]. I previously agreed with the robustness principle: be conservative in what you emit, be tolerant of what you receive. I believed that validating external input at the system boundary and converting it into trusted internal representations was sufficient.
+
+Gaynor exposed the compatibility ratchet: producers emit nonconforming data, consumers accommodate those deviations, and producers face less incentive to correct their behavior. Deviations gradually become compatibility requirements. Written specifications cease to describe the effective protocol, and new implementations must reproduce undocumented quirks. In a three-ring circus of closed-source producers, open-source consumers, and users seeking interoperability, the easiest maintainer to reach isn't necessarily the one responsible for the violation.
+
+Boundary validation may protect my own application, but it does not prevent the producer's noncompliance from becoming established practice. Individually reasonable accommodations can collectively degrade interoperability, raising the barrier to entry for new implementations and making future protocol evolution harder.
+
+This shares a common pattern with invalid persistent state. Within an application, unvalidated data becomes persistent historical baggage when later code relies on it as though its meaning were established. Across a protocol ecosystem, accepted deviations become compatibility baggage. In both cases, accidental behavior acquires the status of a contract, and the cost of restoring explicit semantics increases over time. Permissiveness can create commitments just as surely as constraints can.
+
+I now think about robustness differently. I distinguish between unknown but permitted extensions, supported schema versions, incomplete information, nonconforming inputs, and information whose meaning I cannot determine.
+
+That means processing what the contract permits and preserving unknown data when the contract permits it, without treating it as validated domain state.[fn:8] Malformed semantics call for rejection with useful diagnostics, and quarantine or repair where necessary. Unavoidable deviations need explicit compatibility exceptions; rejection need not mean crashing or an inability to recover.
+
+Robustness means handling deviations without losing control of the system's semantics. I no longer accept liberal parsing as a generally desirable default. When deciding how strict to be, I now consider interoperability, incentives, and ecosystem evolution. I want compatibility workarounds to be deliberate, documented, observable, and limited where practical. The original formulation appears in [[https://datatracker.ietf.org/doc/html/rfc761#section-2.10][RFC 761, section 2.10]], and [[https://datatracker.ietf.org/doc/html/rfc9413][RFC 9413]] offers a recent critique.
+
+* Three Uneasy Pieces, No Universal Formula
+
+Our models are necessarily incomplete, our predictions about future requirements are unreliable, and our experience can bias how we estimate engineering costs. Even so, software must make definite decisions and provide guarantees that its users can rely on. For me, the answer is neither to avoid commitments nor to make them irrevocable, but to make assumptions explicit, enforce justified guarantees, and preserve the ability to revise both.[fn:9]
+
+* Notes
+
+Tarasov and Tarasova’s [[https://archive.org/details/questions-and-answers-in-school-physics][Questions and Answers in School Physics]] inspired me to try writing this as a dialogue. The article took a different form, but I wanted to acknowledge the inspiration.
+
+#+BEGIN_QUOTE
+It's all epistemology, economics, and emergence.
+#+END_QUOTE
+
+- *Epistemology*: What do we know, and how do we know it?
+- *Economics*: What does it cost, and what trade-offs are we making?
+- *Emergence*: What happens when all the pieces interact, often in ways nobody intended?
+
+[fn:1] The title is a nod to [[https://pages.cs.wisc.edu/~remzi/OSTEP/][Operating Systems: Three Easy Pieces]] by Remzi H. Arpaci-Dusseau and Andrea C. Arpaci-Dusseau.
+
+[fn:2] When the language cannot express the model's constraints, they may live instead in comments, imperative validation, and developer discipline. This feels like a relative of Greenspun's law: a sufficiently complex project can end up with a half-baked type system of its own.
+
+[fn:3] In [[https://ms.fortresspress.com/downloads/9781506402741_Prologue.pdf#page=7][“On Stupidity”]], part of “After Ten Years” in /Letters and Papers from Prison/, Dietrich Bonhoeffer describes a loss of independent judgment under the influence of power, rather than a lack of intelligence. His context was Nazi Germany. I draw a narrower connection to my own modeling work.
+
+[fn:4] Domain-driven design (DDD), strong typing, making invalid states unrepresentable (MISU), information hiding, and deep modules are incredibly useful approaches. Optionality, semantic integrity, comprehensibility, observability, and controllability are the qualities I want to preserve. None of the techniques are ends in themselves.
+
+  - *Optionality*: the ability to make, defer, or revise decisions later at reasonable cost.
+  - *Semantic integrity*: the faithful representation of reality in the system's data and trusted state.
+  - *Comprehensibility*: the degree to which people can understand what the system does and why.
+  - *Observability*: in the control-theory sense, the ability to infer a system's internal state from its external outputs.
+  - *Controllability*: in the control-theory sense, the ability to drive a system from any state to a desired state through its available inputs.
+
+[fn:5] My response to discovering that a distinction is blurry is usually to name three more distinctions.
+
+[fn:6] SQL's =NULL= offers a related distinction: missing information is not the same as an invalid value. Comparisons involving =NULL= generally yield =UNKNOWN=, rather than =TRUE= or =FALSE=. But =NULL= alone cannot distinguish “not yet known,” “not applicable,” and “not reported”; when those differences matter, the model needs to represent them explicitly.
+
+[fn:7] There's also the question of who pays: a shortcut for the developer may become repair work for the operator, and an operational safeguard may add implementation work. Since I wear both hats, this is partly an argument about which version of me gets the bill.
+
+[fn:8] In certain systems, I like having a place where I can chuck quarantine data or raw data. See Paul Gross's [[https://www.pgrs.net/2023/12/14/storing-external-requests/][Storing External Requests]].
+
+[fn:9] In an ideal world, I'd like to be rigorous about what my software claims to know, humble about what I might have misunderstood, and deliberate about the costs of both enforcing and relaxing its guarantees.
