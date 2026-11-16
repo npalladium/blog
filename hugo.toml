@@ -1,5 +1,5 @@
 baseURL = "https://npalladium.github.io/blog/"
-languageCode = "en-us"
+locale = "en-us"
 title = "npalladium"
 theme = "hugo-xmin"
 enableGitInfo = true
