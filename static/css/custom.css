@@ -68,6 +68,11 @@ a:focus-visible {
   font-size: 0.95em;
 }
 
+.footnote-reference {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* Org footnotes use a label and body rather than an ordered list. */
 .footnote-definition {
   display: grid;

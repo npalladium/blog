@@ -15,6 +15,7 @@ Local modifications:
 - KaTeX auto-render injected via `head_custom.html`
 - RSS and Atom feeds ordered by publication date
 - Reading typography, article headers, and footnote layout/navigation styled in `static/css/custom.css`
+- Inline Org footnote markers are excluded from text selection; footnote bodies and their labels remain selectable. Clipboard behavior depends on the browser.
 
 ## Post metadata
 
